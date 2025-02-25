@@ -83,10 +83,10 @@ Example of the corresponding twig template for the testimonials list:
 {% for testimonial in testimonials %}
     <div class="col">
         <h2>
-            {{ testimonial.name }}
+            {{ testimonial.contact.fullname }}
         </h2>
         <p>
-            {{ testimonial.explanation|raw }}
+            {{ testimonial.text|raw }}
         </p>
     </div>
 {% endfor %}
