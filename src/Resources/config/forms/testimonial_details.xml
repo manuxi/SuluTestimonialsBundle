@@ -1,0 +1,139 @@
+<?xml version="1.0" ?>
+<form xmlns="http://schemas.sulu.io/template/template"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/form-1.0.xsd"
+>
+    <key>testimonial_details</key>
+
+    <properties>
+        <section name="mandatory">
+            <meta>
+                <title>sulu_testimonials.header.content</title>
+            </meta>
+            <properties>
+                <property name="title" type="text_line" mandatory="true">
+                    <meta>
+                        <title>sulu_testimonials.title</title>
+                    </meta>
+                    <params>
+                        <param name="headline" value="true"/>
+                    </params>
+                    <tag name="sulu.rlp.part"/>
+                </property>
+
+                <property name="routePath" type="route" mandatory="true">
+                    <meta>
+                        <title>sulu_admin.url</title>
+                    </meta>
+                    <params>
+                        <param name="mode" value="leaf"/>
+                    </params>
+                </property>
+
+                <property name="contact" type="single_contact_selection" mandatory="true" colspan="6">
+                    <meta>
+                        <title>sulu_testimonials.contact</title>
+                    </meta>
+                </property>
+                <property name="showContact" type="checkbox" colspan="3">
+                    <meta>
+                        <title>sulu_testimonials.show_contact</title>
+                    </meta>
+                    <params>
+                        <param name="type" value="toggler"/>
+                        <param name="default_value" value="true"/>
+                    </params>
+                </property>
+                <property name="showOrganisation" type="checkbox" colspan="3">
+                    <meta>
+                        <title>sulu_testimonials.show_organisation</title>
+                    </meta>
+                    <params>
+                        <param name="type" value="toggler"/>
+                        <param name="default_value" value="false"/>
+                    </params>
+                </property>
+
+                <property name="date" type="date" mandatory="true" colspan="6">
+                    <meta>
+                        <title>sulu_testimonials.date</title>
+                    </meta>
+                </property>
+                <property name="showDate" type="checkbox" colspan="6">
+                    <meta>
+                        <title>sulu_testimonials.show_date</title>
+                    </meta>
+                    <params>
+                        <param name="type" value="toggler"/>
+                        <param name="default_value" value="true"/>
+                    </params>
+                </property>
+
+                <property name="rating" type="single_select" mandatory="true" colspan="6">
+                    <meta>
+                        <title>sulu_testimonials.rating</title>
+                    </meta>
+                    <params>
+                        <param name="default_value"
+                               type="expression"
+                               value="service('sulu_testimonials.rating_selection').getDefaultValue()"
+                        />
+                        <param name="values"
+                               type="expression"
+                               value="service('sulu_testimonials.rating_selection').getValues()"
+                        />
+                    </params>
+                </property>
+
+                <property name="source" type="text_line" mandatory="true" colspan="6">
+                    <meta>
+                        <title>sulu_testimonials.source</title>
+                    </meta>
+                    <params>
+                        <param name="soft_max_length" value="255"/>
+                    </params>
+                </property>
+
+                <property name="text" type="text_editor" mandatory="true">
+                    <meta>
+                        <title>sulu_testimonials.text</title>
+                    </meta>
+                </property>
+            </properties>
+        </section>
+        <section name="optional">
+            <meta>
+                <title>sulu_testimonials.header.optional</title>
+            </meta>
+            <properties>
+
+                <property name="url" type="url" colspan="6">
+                    <meta>
+                        <title>sulu_testimonials.link</title>
+                    </meta>
+
+                    <params>
+                        <param name="defaults" type="collection">
+                            <param name="scheme" value="https://"/>
+                            <param name="specific_part" value="www.google.com"/>
+                        </param>
+                        <param name="schemes" type="collection">
+                            <param name="https://"/>
+                            <param name="http://"/>
+                        </param>
+                    </params>
+                </property>
+
+                <property name="image" type="single_media_selection" colspan="6">
+                    <meta>
+                        <title>sulu_testimonials.image</title>
+                    </meta>
+                    <params>
+                        <param name="types" value="image"/>
+                    </params>
+                </property>
+
+            </properties>
+        </section>
+    </properties>
+</form>

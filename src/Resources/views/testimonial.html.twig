@@ -1,0 +1,66 @@
+{% extends "body.html.twig" %}
+
+{% block content %}
+
+    {#{{ dump(testimonial.contact.accountContacts[0].account.name) }}#}
+    {#{{ dump(testimonial.contact) }}#}
+
+    {% set name = "" %}
+    {% set organisation = "" %}
+    {% if testimonial.showContact|default %}
+        {% set name = testimonial.contact.fullName %}
+    {% endif %}
+    {% if testimonial.showOrganisation|default %}
+        {% set organisation = testimonial.contact.accountContacts[0].account.name %}
+    {% endif %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12 mb-3">
+                <h2>{{ "sulu_testimonials.title"|trans({}, 'admin') }}: {{ testimonial.title }}</h2>
+
+                <div class="media d-flex">
+                    {% if testimonial.image %}
+                        {% set media = sulu_resolve_media(testimonial.image, app.request.locale) %}
+                        {% set testimonialImage = media.thumbnails["sulu-240x"] %}
+                        <img src="{{ asset(testimonialImage) }}" class="img-thumbnail d-block border shadow rounded" style="width:4rem;" alt="{{ testimonial.title }}">
+                    {% endif %}
+                    <div>
+                        {% if testimonial.showContact|default %}
+                            <p class="mb-0">
+                                {{ name }}
+                            </p>
+                        {% endif %}
+                        {% if testimonial.showOrganisation|default %}
+                            <p class="mb-0">
+                                {{ organisation }}
+                            </p>
+                        {% endif %}
+                        {% if testimonial.showDate|default %}
+                            <small class="text-muted">
+                                {{ testimonial.date|format_datetime('medium', 'none', locale: app.request.locale) }}
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <p>{{ testimonial.text|raw }}</p>
+
+                <div style="font-size:24px;color:#ccc;">
+                    <span{% if testimonial.rating >= 1 %} style="color: gold;"{% endif %}>★</span>
+                    <span{% if testimonial.rating >= 2 %} style="color: gold;"{% endif %}>★</span>
+                    <span{% if testimonial.rating >= 3 %} style="color: gold;"{% endif %}>★</span>
+                    <span{% if testimonial.rating >= 4 %} style="color: gold;"{% endif %}>★</span>
+                    <span{% if testimonial.rating >= 5 %} style="color: gold;"{% endif %}>★</span>
+                </div>
+
+                {% if testimonial.contact.avatar %}
+                    {% set media = sulu_resolve_media(testimonial.contact.avatar, app.request.locale) %}
+                    {% set image = media.thumbnails["sulu-50x50"] %}
+                    <img src="{{ asset(image) }}" alt="{{ testimonial.contact.fullname }}">
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

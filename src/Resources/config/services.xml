@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="sulu_testimonials.admin.testimonials" class="Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAdmin">
+            <argument type="service" id="sulu_admin.view_builder_factory"/>
+            <argument type="service" id="sulu_security.security_checker"/>
+            <argument type="service" id="sulu_core.webspace.webspace_manager"/>
+            <argument type="service" id="sulu_automation.automation_view_builder_factory"/>
+
+            <tag name="sulu.admin"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+
+        <service id="sulu_testimonials.admin.settings" class="Manuxi\SuluTestimonialsBundle\Admin\SettingsAdmin">
+            <argument type="service" id="sulu_admin.view_builder_factory"/>
+            <argument type="service" id="sulu_security.security_checker"/>
+
+            <tag name="sulu.admin"/>
+            <tag name="sulu.context" context="admin"/>
+        </service>
+
+        <service id="sulu_testimonials.doctrine_list_representation_factory" class="Manuxi\SuluTestimonialsBundle\Common\DoctrineListRepresentationFactory">
+            <argument type="service" id="sulu_core.rest_helper"/>
+            <argument type="service" id="sulu_core.list_rest_helper"/>
+            <argument type="service" id="sulu_core.doctrine_list_builder_factory"/>
+            <argument type="service" id="sulu_core.list_builder.field_descriptor_factory"/>
+            <argument type="service" id="sulu_core.webspace.webspace_manager"/>
+            <argument type="service" id="sulu_testimonials.repository.testimonial_translation"/>
+            <argument type="service" id="sulu_media.media_manager"/>
+
+            <tag name="sulu.context" context="admin"/>
+        </service>
+
+        <!-- Repositories -->
+        <service id="sulu_testimonials.repository.testimonial" class="Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository" public="true" lazy="true">
+            <argument type="service" id="doctrine"/>
+            <tag name="doctrine.repository_service"/>
+        </service>
+
+        <service id="sulu_testimonials.repository.testimonial_translation" class="Manuxi\SuluTestimonialsBundle\Repository\TestimonialTranslationRepository" lazy="true">
+            <argument type="service" id="doctrine"/>
+        </service>
+
+        <!-- needed for massive search/automation bundle? -->
+        <!-- Otherwise: "Make sure the service exists and is tagged with 'doctrine.repository_service'" -->
+        <service id="Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository" public="true" lazy="true">
+            <argument type="service" id="doctrine"/>
+            <tag name="doctrine.repository_service"/>
+        </service>
+
+        <service id="sulu_testimonial.repository.testimonial_seo" class="Manuxi\SuluTestimonialsBundle\Repository\TestimonialSeoRepository" public="true" lazy="true">
+            <argument type="service" id="doctrine"/>
+        </service>
+
+        <service id="sulu_testimonial.repository.testimonial_excerpt" class="Manuxi\SuluTestimonialsBundle\Repository\TestimonialExcerptRepository" public="true" lazy="true">
+            <argument type="service" id="doctrine"/>
+        </service>
+
+        <service id="sulu_testimonials.single_testimonial_selection" class="Manuxi\SuluTestimonialsBundle\Content\Type\SingleTestimonialSelection">
+            <argument type="service" id="doctrine.orm.default_entity_manager"/>
+
+            <tag name="sulu.content.type" alias="single_testimonial_selection" />
+        </service>
+
+        <service id="sulu_testimonials.testimonials_selection" class="Manuxi\SuluTestimonialsBundle\Content\Type\TestimonialsSelection">
+            <argument type="service" id="doctrine.orm.default_entity_manager"/>
+
+            <tag name="sulu.content.type" alias="testimonials_selection"/>
+        </service>
+
+        <service id="Manuxi\SuluTestimonialsBundle\Content\TestimonialsSelectionContentType">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+
+            <tag name="sulu.content.type" alias="testimonials_selection"/>
+        </service>
+
+        <service id="Manuxi\SuluTestimonialsBundle\Routing\TestimonialsRouteDefaultsProvider">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+
+            <tag name="sulu_route.defaults_provider"/>
+        </service>
+
+        <service id="sulu_testimonials.testimonials_data_provider" class="Manuxi\SuluTestimonialsBundle\Content\TestimonialsDataProvider">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+            <argument type="service" id="sulu_core.array_serializer"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="sulu_testimonials.rating_selection" />
+
+            <tag name="sulu.smart_content.data_provider" alias="testimonials"/>
+        </service>
+
+        <service id="sulu_testimonials.webspace_selector"
+                 class="Manuxi\SuluTestimonialsBundle\Admin\Helper\WebspaceSelector"
+                 public="true">
+            <argument type="service" id="sulu_core.webspace.webspace_manager"/>
+        </service>
+
+        <!-- LISTENER -->
+        <service id="sulu_testimonials.persistence.testimonial_listener.doctrine.author" class="Manuxi\SuluTestimonialsBundle\EventListener\Doctrine\AuthorListener">
+            <argument>%sulu.model.contact.class%</argument>
+            <argument type="service" id="security.token_storage" on-invalid="null"/>
+            <tag name="doctrine.event_listener" event="loadClassMetadata"/>
+            <tag name="doctrine.event_listener" event="onFlush"/>
+        </service>
+        <service id="sulu_testimonials.persistence.testimonial_listener.doctrine.authored" class="Manuxi\SuluTestimonialsBundle\EventListener\Doctrine\AuthoredListener">
+            <tag name="doctrine.event_listener" event="loadClassMetadata"/>
+            <tag name="doctrine.event_listener" event="preUpdate"/>
+            <tag name="doctrine.event_listener" event="prePersist"/>
+        </service>
+
+        <!-- MODELS -->
+        <service id="sulu_testimonials.model.testimonial" class="Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialModel">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+            <argument type="service" id="sulu.repository.media"/>
+            <argument type="service" id="sulu.repository.contact"/>
+            <argument type="service" id="sulu_route.manager.route_manager"/>
+            <argument type="service" id="sulu.repository.route"/>
+            <argument type="service" id="doctrine.orm.entity_manager" />
+            <argument type="service" id="sulu_activity.domain_event_collector"/>
+        </service>
+
+        <service id="sulu_testimonial.model.testimonial_seo" class="Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialSeoModel">
+            <argument type="service" id="sulu_testimonial.repository.testimonial_seo"/>
+        </service>
+
+        <service id="sulu_testimonial.model.testimonial_excerpt" class="Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialExcerptModel">
+            <argument type="service" id="sulu_testimonial.repository.testimonial_excerpt"/>
+            <argument type="service" id="sulu_category.category_manager"/>
+            <argument type="service" id="sulu_tag.tag_manager"/>
+            <argument type="service" id="sulu.repository.media"/>
+        </service>
+
+        <service id="sulu_testimonials.object_provider" public="true" class="Manuxi\SuluTestimonialsBundle\Preview\TestimonialsObjectProvider">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+            <tag name="sulu_preview.object_provider" provider-key="testimonials"/>
+        </service>
+
+        <service id="sulu_testimonials.routing_provider" public="true" class="Manuxi\SuluTestimonialsBundle\Routing\TestimonialsRouteDefaultsProvider">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+            <tag name="sulu_route.defaults_provider"/>
+        </service>
+
+        <service id="sulu_testimonials.sitemap_provider" public="true" class="Manuxi\SuluTestimonialsBundle\Sitemap\TestimonialsSitemapProvider">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+            <argument type="service" id="sulu_core.webspace.webspace_manager"/>
+            <tag name="sulu.sitemap.provider"/>
+        </service>
+
+        <service id="sulu_testimonials.rating_selection" class="Manuxi\SuluTestimonialsBundle\Service\TestimonialRatingSelect" public="true">
+            <argument type="service" id="translator.default"/>
+        </service>
+
+        <!--Link-->
+        <service id="sulu_testimonials.testimonial_link_provider" class="Manuxi\SuluTestimonialsBundle\Link\TestimonialLinkProvider">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+            <argument type="service" id="translator.default"/>
+            <tag name="sulu.link.provider" alias="testimonial"/>
+        </service>
+
+        <!--Trash-->
+        <service id="sulu_testimonials.testimonials_trash_item_handler" class="Manuxi\SuluTestimonialsBundle\Trash\TestimonialsTrashItemHandler">
+            <argument type="service" id="sulu_trash.trash_item_repository"/>
+            <argument type="service" id="doctrine.orm.default_entity_manager"/>
+            <argument type="service" id="sulu_trash.doctrine_restore_helper"/>
+            <argument type="service" id="sulu_activity.domain_event_collector"/>
+
+            <tag name="sulu_trash.store_trash_item_handler"/>
+            <tag name="sulu_trash.restore_trash_item_handler"/>
+            <tag name="sulu_trash.restore_configuration_provider"/>
+        </service>
+
+        <!--Twig-->
+        <service id="sulu_testimonials.default.twig_extension" class="Manuxi\SuluTestimonialsBundle\Twig\TestimonialsTwigExtension">
+            <argument type="service" id="sulu_testimonials.repository.testimonial"/>
+            <tag name="twig.extension"/>
+        </service>
+        <service id="sulu_testimonials.settings.twig_extension" class="Manuxi\SuluTestimonialsBundle\Twig\TestimonialsSettingsTwigExtension">
+            <argument type="service" id="doctrine.orm.default_entity_manager"/>
+            <tag name="twig.extension"/>
+        </service>
+    </services>
+</container>
