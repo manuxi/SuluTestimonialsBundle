@@ -24,6 +24,7 @@ The testimonials are translatable.
 Please feel comfortable submitting feature requests. 
 This bundle is still in development. Use at own risk 🤞🏻
 
+![image](https://github.com/user-attachments/assets/273d4912-8b50-4bd2-8c9b-bb53f338cb37)
 
 ## 👩🏻‍🏭 Installation
 Install the package with:
