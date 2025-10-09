@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="sulu_testimonials.automation.publish_handler" class="Manuxi\SuluTestimonialsBundle\Automation\TestimonialPublishTaskHandler">
+            <argument type="service" id="doctrine.orm.default_entity_manager"/>
+            <argument type="service" id="translator.default"/>
+            <argument type="service" id="sulu_activity.domain_event_collector"/>
+            <argument type="service" id="event_dispatcher"/>
+            <tag name="task.handler"/>
+        </service>
+
+        <service id="sulu_testimonials.automation.unpublish_handler" class="Manuxi\SuluTestimonialsBundle\Automation\TestimonialUnpublishTaskHandler">
+            <argument type="service" id="doctrine.orm.default_entity_manager"/>
+            <argument type="service" id="translator.default"/>
+            <argument type="service" id="sulu_activity.domain_event_collector"/>
+            <argument type="service" id="event_dispatcher"/>
+            <tag name="task.handler"/>
+        </service>
+    </services>
+</container>

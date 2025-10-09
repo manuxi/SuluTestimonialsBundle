@@ -13,6 +13,9 @@ use FOS\RestBundle\Controller\Annotations\RouteResource;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\View\ViewHandlerInterface;
 use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialSeoModel;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialPublishedEvent;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialSavedEvent;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialUnpublishedEvent;
 use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Component\Rest\AbstractRestController;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
@@ -27,6 +30,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @RouteResource("testimonial")
@@ -35,30 +39,18 @@ class TestimonialsController extends AbstractRestController implements ClassReso
 {
     use RequestParametersTrait;
 
-    private TestimonialModel $testimonialModel;
-    private TestimonialSeoModel $testimonialSeoModel;
-    private TestimonialExcerptModel $testimonialExcerptModel;
-    private DoctrineListRepresentationFactory $doctrineListRepresentationFactory;
-    private SecurityCheckerInterface $securityChecker;
-    private TrashManagerInterface $trashManager;
-
     public function __construct(
-        TestimonialModel $testimonialModel,
-        TestimonialSeoModel $testimonialSeoModel,
-        TestimonialExcerptModel $testimonialExcerptModel,
-        DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
-        SecurityCheckerInterface $securityChecker,
-        ViewHandlerInterface $viewHandler,
-        TrashManagerInterface $trashManager,
-        ?TokenStorageInterface $tokenStorage = null
+        private readonly TestimonialModel                  $testimonialModel,
+        private readonly TestimonialSeoModel               $testimonialSeoModel,
+        private readonly TestimonialExcerptModel           $testimonialExcerptModel,
+        private readonly DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
+        private readonly SecurityCheckerInterface          $securityChecker,
+        private readonly TrashManagerInterface             $trashManager,
+        private readonly EventDispatcherInterface          $dispatcher,
+        ViewHandlerInterface                               $viewHandler,
+        ?TokenStorageInterface                             $tokenStorage = null
     ) {
         parent::__construct($viewHandler, $tokenStorage);
-        $this->testimonialModel                 = $testimonialModel;
-        $this->testimonialSeoModel              = $testimonialSeoModel;
-        $this->testimonialExcerptModel          = $testimonialExcerptModel;
-        $this->doctrineListRepresentationFactory = $doctrineListRepresentationFactory;
-        $this->securityChecker                   = $securityChecker;
-        $this->trashManager = $trashManager;
     }
 
     public function cgetAction(Request $request): Response
@@ -94,6 +86,7 @@ class TestimonialsController extends AbstractRestController implements ClassReso
     public function postAction(Request $request): Response
     {
         $entity = $this->testimonialModel->create($request);
+        $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
         return $this->handleView($this->view($entity, 201));
     }
 
@@ -113,12 +106,15 @@ class TestimonialsController extends AbstractRestController implements ClassReso
             switch ($action) {
                 case 'publish':
                     $entity = $this->testimonialModel->publish($id, $request);
+                    $this->dispatcher->dispatch(new TestimonialPublishedEvent($entity));
                     break;
                 case 'unpublish':
                     $entity = $this->testimonialModel->unpublish($id, $request);
+                    $this->dispatcher->dispatch(new TestimonialUnpublishedEvent($entity));
                     break;
                 case 'copy':
                     $entity = $this->testimonialModel->copy($id, $request);
+                    $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
                     break;
                 case 'copy-locale':
                     $locale = $this->getRequestParameter($request, 'locale', true);
@@ -134,6 +130,7 @@ class TestimonialsController extends AbstractRestController implements ClassReso
                     }
 
                     $entity = $this->testimonialModel->copyLanguage($id, $request, $srcLocale, $destLocales);
+                    $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
                     break;
                 default:
                     throw new BadRequestHttpException(sprintf('Unknown action "%s".', $action));
@@ -159,6 +156,8 @@ class TestimonialsController extends AbstractRestController implements ClassReso
         $this->testimonialSeoModel->updateTestimonialSeo($entity->getSeo(), $request);
         $this->testimonialExcerptModel->updateTestimonialExcerpt($entity->getExcerpt(), $request);
 
+        $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
+
         return $this->handleView($this->view($entity));
     }
 
@@ -175,6 +174,9 @@ class TestimonialsController extends AbstractRestController implements ClassReso
         $this->trashManager->store(Testimonial::RESOURCE_KEY, $entity);
 
         $this->testimonialModel->delete($entity);
+
+        $this->dispatcher->dispatch(new TestimonialUnpublishedEvent($entity));
+
         return $this->handleView($this->view(null, 204));
     }
 

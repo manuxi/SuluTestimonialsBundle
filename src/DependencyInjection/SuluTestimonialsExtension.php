@@ -32,6 +32,15 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
         $loader->load('services.xml');
         $loader->load('controller.xml');
 
+        if ($container->hasParameter('kernel.bundles')) {
+            /** @var string[] $bundles */
+            $bundles = $container->getParameter('kernel.bundles');
+
+            if (\array_key_exists('SuluAutomationBundle', $bundles)) {
+                $loader->load('automation.xml');
+            }
+        }
+
         $this->configurePersistence($config['objects'], $container);
     }
 
@@ -42,7 +51,7 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                 'sulu_search',
                 [
                     'indexes' => [
-                        'testimonial' => [
+                        'testimonials' => [
                             'name' => 'sulu_testimonials.search_name',
                             'icon' => 'su-tag-pen',
                             'security_context' => Testimonial::SECURITY_CONTEXT,

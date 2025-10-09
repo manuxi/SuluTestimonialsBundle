@@ -17,7 +17,10 @@ This bundle contains
 - Possibility to assign a contact as author
 - Twig Extension for resolving Testimonials / get a list of Testimonials
 - Events for displaying Activities
-and more...
+- Search indexes
+  - refresh whenever entity is changed
+  - distinct between normal and draft
+  and more...
 
 The testimonials are translatable.
 
@@ -45,6 +48,19 @@ Please add the following to your `routes_admin.yaml`:
 SuluTestimonialsBundle:
     resource: '@SuluTestimonialsBundle/Resources/config/routes_admin.yml'
 ```
+Don't forget fo add the index to your sulu_search.yaml:
+
+add "testimonials"!
+
+"testimonials" is the index of published, "testimonials_draft" the index of unpublished elements.
+```yaml
+sulu_search:
+    website:
+        indexes:
+            - testimonials
+            - ...
+``` 
+
 Last but not least the schema of the database needs to be updated.  
 
 Some tables will be created (prefixed with app_):  
@@ -92,9 +108,6 @@ Example of the corresponding twig template for the testimonials list:
     </div>
 {% endfor %}
 ```
-
-## 🧶 Configuration
-There exists no configuration.
 
 ## 👩‍🍳 Contributing
 For the sake of simplicity this extension was kept small.
