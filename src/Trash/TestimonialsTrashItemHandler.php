@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAdmin;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialRestoredEvent;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialRemovedEvent;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialSavedEvent;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
 use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
@@ -20,27 +22,17 @@ use Sulu\Bundle\TrashBundle\Application\TrashItemHandler\RestoreTrashItemHandler
 use Sulu\Bundle\TrashBundle\Application\TrashItemHandler\StoreTrashItemHandlerInterface;
 use Sulu\Bundle\TrashBundle\Domain\Model\TrashItemInterface;
 use Sulu\Bundle\TrashBundle\Domain\Repository\TrashItemRepositoryInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, RestoreTrashItemHandlerInterface, RestoreConfigurationProviderInterface
 {
-    private TrashItemRepositoryInterface $trashItemRepository;
-    private EntityManagerInterface $entityManager;
-    private DoctrineRestoreHelperInterface $doctrineRestoreHelper;
-    private DomainEventCollectorInterface $domainEventCollector;
-
     public function __construct(
-        TrashItemRepositoryInterface   $trashItemRepository,
-        EntityManagerInterface         $entityManager,
-        DoctrineRestoreHelperInterface $doctrineRestoreHelper,
-        DomainEventCollectorInterface  $domainEventCollector
-    )
-    {
-        $this->trashItemRepository = $trashItemRepository;
-        $this->entityManager = $entityManager;
-        $this->doctrineRestoreHelper = $doctrineRestoreHelper;
-        $this->domainEventCollector = $domainEventCollector;
-    }
+        private readonly TrashItemRepositoryInterface   $trashItemRepository,
+        private readonly EntityManagerInterface         $entityManager,
+        private readonly DoctrineRestoreHelperInterface $doctrineRestoreHelper,
+        private readonly DomainEventCollectorInterface $domainEventCollector,
+        private readonly EventDispatcherInterface $dispatcher,
+    ) {}
 
     public static function getResourceKey(): string
     {
@@ -49,6 +41,7 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
 
     public function store(object $resource, array $options = []): TrashItemInterface
     {
+        /* @var Testimonial $resource */
         $image = $resource->getImage();
         $contact = $resource->getContact();
 
@@ -63,7 +56,7 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
             "publishedAt" => $resource->getPublishedAt(),
             "ext" => $resource->getExt(),
             "locale" => $resource->getLocale(),
-            "imageId" => $image ? $image->getId() : null,
+            "imageId" => $image?->getId(),
             "contactId" => $contact ? $contact->getId() : null,
             "url" => $resource->getUrl(),
             "showContact" => $resource->getShowContact(),
@@ -73,12 +66,17 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
             "author" => $resource->getAuthor(),
 
         ];
+
+        $restoreType = isset($options['locale']) ? 'translation' : null;
+
+        $this->dispatcher->dispatch(new TestimonialRemovedEvent($resource));
+
         return $this->trashItemRepository->create(
             Testimonial::RESOURCE_KEY,
             (string)$resource->getId(),
             $resource->getTitle(),
             $data,
-            null,
+            $restoreType,
             $options,
             Testimonial::SECURITY_CONTEXT,
             null,
@@ -130,6 +128,9 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
         $this->doctrineRestoreHelper->persistAndFlushWithId($testimonial, $testimonialId);
         $this->createRoute($this->entityManager, $testimonialId, $data['locale'], $testimonial->getRoutePath(), Testimonial::class);
         $this->entityManager->flush();
+
+        $this->dispatcher->dispatch(new TestimonialSavedEvent($testimonial));
+
         return $testimonial;
     }
 

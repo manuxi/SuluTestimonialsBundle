@@ -16,6 +16,10 @@ use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\TestimonialModelInterface;
 use Manuxi\SuluTestimonialsBundle\Entity\Traits\ArrayPropertyTrait;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialPublishedEvent as SearchPublishedEvent;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialRemovedEvent as SearchRemovedEvent;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialSavedEvent as SearchSavedEvent;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialUnpublishedEvent as SearchUnpublishedEvent;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\ContactBundle\Entity\ContactRepository;
 use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
@@ -23,19 +27,21 @@ use Sulu\Bundle\RouteBundle\Entity\RouteRepositoryInterface;
 use Sulu\Bundle\RouteBundle\Manager\RouteManagerInterface;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class TestimonialModel implements TestimonialModelInterface
 {
     use ArrayPropertyTrait;
 
     public function __construct(
-        private TestimonialRepository $testimonialRepository,
-        private MediaRepositoryInterface $mediaRepository,
-        private ContactRepository $contactRepository,
-        private RouteManagerInterface $routeManager,
-        private RouteRepositoryInterface $routeRepository,
-        private EntityManagerInterface $entityManager,
-        private DomainEventCollectorInterface $domainEventCollector
+        private readonly TestimonialRepository $testimonialRepository,
+        private readonly MediaRepositoryInterface $mediaRepository,
+        private readonly ContactRepository $contactRepository,
+        private readonly RouteManagerInterface $routeManager,
+        private readonly RouteRepositoryInterface $routeRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly DomainEventCollectorInterface $domainEventCollector,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {}
 
     /**
@@ -57,6 +63,8 @@ class TestimonialModel implements TestimonialModelInterface
         $this->domainEventCollector->collect(
             new TestimonialRemovedEvent($entity->getId(), $entity->getTitle() ?? '')
         );
+        $this->dispatcher->dispatch(new SearchRemovedEvent($entity));
+
         $this->removeRoutesForEntity($entity);
         $this->testimonialRepository->remove($entity->getId());
     }
@@ -83,6 +91,8 @@ class TestimonialModel implements TestimonialModelInterface
         //explicit flush to save routes persisted by updateRoutesForEntity()
         $this->entityManager->flush();
 
+        $this->dispatcher->dispatch(new SearchSavedEvent($entity));
+
         return $entity;
     }
 
@@ -95,15 +105,23 @@ class TestimonialModel implements TestimonialModelInterface
     public function update(int $id, Request $request): Testimonial
     {
         $entity = $this->findByIdAndLocale($id, $request);
+        $this->dispatcher->dispatch(new SearchUnpublishedEvent($entity));
+
         $entity = $this->mapDataToEntity($entity, $request->request->all());
         $entity = $this->mapSettingsToEntity($entity, $request->request->all());
-        $this->updateRoutesForEntity($entity);
 
         $this->domainEventCollector->collect(
             new TestimonialModifiedEvent($entity, $request->request->all())
         );
 
-        return $this->testimonialRepository->save($entity);
+        $entity = $this->testimonialRepository->save($entity);
+
+        $this->updateRoutesForEntity($entity);
+        $this->entityManager->flush();
+
+        $this->dispatcher->dispatch(new SearchSavedEvent($entity));
+
+        return $entity;
     }
 
     /**
@@ -115,13 +133,18 @@ class TestimonialModel implements TestimonialModelInterface
     public function publish(int $id, Request $request): Testimonial
     {
         $entity = $this->findByIdAndLocale($id, $request);
+        $this->dispatcher->dispatch(new SearchUnpublishedEvent($entity));
+
         $entity->setPublished(true);
+        $entity = $this->testimonialRepository->save($entity);
 
         $this->domainEventCollector->collect(
             new TestimonialPublishedEvent($entity, $request->request->all())
         );
+        $this->dispatcher->dispatch(new SearchPublishedEvent($entity));
 
-        return $this->testimonialRepository->save($entity);
+        return $entity;
+
     }
 
     /**
@@ -133,21 +156,34 @@ class TestimonialModel implements TestimonialModelInterface
     public function unpublish(int $id, Request $request): Testimonial
     {
         $entity = $this->findByIdAndLocale($id, $request);
+        $this->dispatcher->dispatch(new SearchUnpublishedEvent($entity));
+
         $entity->setPublished(false);
+        $entity = $this->testimonialRepository->save($entity);
 
         $this->domainEventCollector->collect(
             new TestimonialUnpublishedEvent($entity, $request->request->all())
         );
+        $this->dispatcher->dispatch(new SearchPublishedEvent($entity));
 
-        return $this->testimonialRepository->save($entity);
+        return $entity;
     }
 
     public function copy(int $id, Request $request): Testimonial
     {
-        $entity = $this->findById($id);
-        $copy = $entity->copy();
+        $locale = $this->getLocaleFromRequest($request);
 
-        return $this->testimonialRepository->save($copy);
+        $entity = $this->findById($id);
+        $entity->setLocale($locale);
+
+        $copy = $this->testimonialRepository->create($locale);
+
+        $copy = $entity->copy($copy);
+        $copy = $this->testimonialRepository->save($copy);
+        $this->dispatcher->dispatch(new SearchSavedEvent($copy));
+
+        return $copy;
+
     }
 
     public function copyLanguage(int $id, Request $request, string $srcLocale, array $destLocales): Testimonial
@@ -166,7 +202,10 @@ class TestimonialModel implements TestimonialModelInterface
             new TestimonialCopiedLanguageEvent($entity, $request->request->all())
         );
 
-        return $this->testimonialRepository->save($entity);
+        $entity = $this->testimonialRepository->save($entity);
+        $this->dispatcher->dispatch(new SearchSavedEvent($entity));
+
+        return $entity;
     }
 
     /**

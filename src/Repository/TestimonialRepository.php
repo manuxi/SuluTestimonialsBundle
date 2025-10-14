@@ -76,8 +76,10 @@ class TestimonialRepository extends ServiceEntityRepository implements DataProvi
     {
         $queryBuilder = $this->createQueryBuilder('testimonial')
             ->leftJoin('testimonial.translations', 'translation')
-            ->where('translation.published = 1')
-            ->andWhere('translation.locale = :locale')->setParameter('locale', $locale)
+            ->where('translation.published = :published')
+            ->setParameter('published', true)
+            ->andWhere('translation.locale = :locale')
+            ->setParameter('locale', $locale)
             ->orderBy('translation.publishedAt', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
@@ -96,39 +98,11 @@ class TestimonialRepository extends ServiceEntityRepository implements DataProvi
         $query = $this->createQueryBuilder('testimonial')
             ->select('count(testimonial)')
             ->leftJoin('testimonial.translations', 'translation')
-            ->andWhere('translation.locale = :locale')->setParameter('locale', $locale);
+            ->where('translation.published = :published')
+            ->setParameter('published', true)
+            ->andWhere('translation.locale = :locale')
+            ->setParameter('locale', $locale);
         return $query->getQuery()->getSingleScalarResult();
-    }
-
-    /**
-     * Returns filtered entities.
-     * When pagination is active the result count is pageSize + 1 to determine has next page.
-     *
-     * @param array $filters array of filters: tags, tagOperator
-     * @param int $page
-     * @param int $pageSize
-     * @param int $limit
-     * @param string $locale
-     * @param mixed[] $options
-     * @return object[]
-     * @noinspection PhpMissingReturnTypeInspection
-     * @noinspection PhpMissingParamTypeInspection
-     */
-    public function findByFilters(
-        $filters,
-        $page,
-        $pageSize,
-        $limit,
-        $locale,
-        $options = []
-    ) {
-        $entities = $this->getPublishedTestimonials($filters, $locale, $page, $pageSize, $limit, $options);
-        return \array_map(
-            function (Testimonial $entity) use ($locale) {
-                return $entity->setLocale($locale);
-            },
-            $entities
-        );
     }
 
     protected function appendJoins(QueryBuilder $queryBuilder, $alias, $locale): void
@@ -147,7 +121,10 @@ class TestimonialRepository extends ServiceEntityRepository implements DataProvi
     protected function append(QueryBuilder $queryBuilder, string $alias, string $locale, $options = []): array
     {
         //$queryBuilder->andWhere($alias . '.translation.published = true');
-
+        $queryBuilder->innerJoin($alias . '.translations', 'translation', Join::WITH, 'translation.locale = :locale');
+        $queryBuilder->setParameter('locale', $locale);
+        $queryBuilder->andWhere('translation.published = :published');
+        $queryBuilder->setParameter('published', true);
         return [];
     }
 
@@ -163,14 +140,28 @@ class TestimonialRepository extends ServiceEntityRepository implements DataProvi
         $queryBuilder->setParameter('locale', $locale);
     }
 
+    public function findByFilters($filters, $page, $pageSize, $limit, $locale, $options = []): array
+    {
+        $entities = $this->getPublishedTestimonials($filters, $locale, $page, $pageSize, $limit, $options);
+
+        return \array_map(
+            function (Testimonial $entity) use ($locale) {
+                return $entity->setLocale($locale);
+            },
+            $entities
+        );
+    }
+
     public function hasNextPage(array $filters, ?int $page, ?int $pageSize, ?int $limit, string $locale, array $options = []): bool
     {
         $pageCurrent = (key_exists('page', $options)) ? (int)$options['page'] : 0;
         $totalArticles = $this->createQueryBuilder('n')
             ->select('count(n.id)')
             ->leftJoin('n.translations', 'translation')
-            ->where('translation.published = 1')
-            ->andWhere('translation.locale = :locale')->setParameter('locale', $locale)
+            ->where('translation.published = :published')
+            ->setParameter('published', true)
+            ->andWhere('translation.locale = :locale')
+            ->setParameter('locale', $locale)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -184,8 +175,10 @@ class TestimonialRepository extends ServiceEntityRepository implements DataProvi
 
         $queryBuilder = $this->createQueryBuilder('testimonial')
             ->leftJoin('testimonial.translations', 'translation')
-            ->where('translation.published = 1')
-            ->andWhere('translation.locale = :locale')->setParameter('locale', $locale)
+            ->where('translation.published = :published')
+            ->setParameter('published', true)
+            ->andWhere('translation.locale = :locale')
+            ->setParameter('locale', $locale)
             ->orderBy('translation.publishedAt', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($pageCurrent * $limit);
@@ -214,7 +207,61 @@ class TestimonialRepository extends ServiceEntityRepository implements DataProvi
         $this->prepareCategoriesFilter($queryBuilder, $filters);
     }
 
-    private function prepareTagsFilter(QueryBuilder $queryBuilder, array $filters):void
+    private function prepareTagsFilter(QueryBuilder $queryBuilder, array $filters): void
+    {
+        if (empty($filters['tags'])) {
+            return;
+        }
+
+        $operator = $filters['tagOperator'] ?? 'or';
+
+        if ($operator === 'and') {
+            // AND: Entity must have ALL tags (multiple JOINs necessary)
+            foreach ($filters['tags'] as $i => $tag) {
+                $alias = 'tag' . $i;
+                $queryBuilder
+                    ->innerJoin('excerpt_translation.tags', $alias)
+                    ->andWhere($queryBuilder->expr()->eq($alias . '.id', ':tag' . $i))
+                    ->setParameter('tag' . $i, $tag);
+            }
+        } else {
+            // OR: Entity must at least have one of the tags
+            $queryBuilder
+                ->leftJoin('excerpt_translation.tags', 'tags')
+                ->andWhere($queryBuilder->expr()->in('tags.id', ':tags'))
+                ->setParameter('tags', $filters['tags']);
+        }
+    }
+
+    private function prepareCategoriesFilter(QueryBuilder $queryBuilder, array $filters): void
+    {
+        if (empty($filters['categories'])) {
+            return;
+        }
+
+        $operator = $filters['categoryOperator'] ?? 'or';
+
+        if ($operator === 'and') {
+            // AND: Entity must have ALL categories (multiple JOINs necessary)
+            $queryBuilder->leftJoin('excerpt_translation.categories', 'categories');
+
+            foreach ($filters['categories'] as $i => $category) {
+                $alias = 'category' . $i;
+                $queryBuilder
+                    ->innerJoin('excerpt_translation.categories', $alias)
+                    ->andWhere($queryBuilder->expr()->eq($alias . '.id', ':category' . $i))
+                    ->setParameter('category' . $i, $category);
+            }
+        } else {
+            // OR: Entity must at least have one of the categories
+            $queryBuilder
+                ->leftJoin('excerpt_translation.categories', 'categories')
+                ->andWhere($queryBuilder->expr()->in('categories.id', ':categories'))
+                ->setParameter('categories', $filters['categories']);
+        }
+    }
+
+    private function prepareTagsFilterX(QueryBuilder $queryBuilder, array $filters):void
     {
         if (!empty($filters['tags'])) {
 
@@ -249,7 +296,7 @@ class TestimonialRepository extends ServiceEntityRepository implements DataProvi
         }
     }
 
-    private function prepareCategoriesFilter(QueryBuilder $queryBuilder, array $filters):void
+    private function prepareCategoriesFilterX(QueryBuilder $queryBuilder, array $filters):void
     {
         if (!empty($filters['categories'])) {
 

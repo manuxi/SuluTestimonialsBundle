@@ -78,6 +78,10 @@ class Testimonial implements AuditableTranslatableInterface
         $this->initExt();
     }
 
+    public function __clone(){
+        $this->id = null;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -206,9 +210,18 @@ class Testimonial implements AuditableTranslatableInterface
      * @todo implement object cloning/copy
      * @return $this|null
      */
-    public function copy(): ?static
+    public function copy(Testimonial $copy): ?static
     {
-        return null;
+        if ($currentTranslation = $this->getTranslation($this->getLocale())) {
+            $newTranslation = clone $currentTranslation;
+            $copy->setTranslation($newTranslation);
+
+            //copy ext also...
+            foreach($this->ext as $key => $translatable) {
+                $copy->addExt($key, clone $translatable);
+            }
+        }
+        return $copy;
     }
 
     public function copyToLocale(string $locale): self

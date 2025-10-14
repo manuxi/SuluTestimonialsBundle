@@ -46,7 +46,7 @@ return [
 Please add the following to your `routes_admin.yaml`:
 ```yaml
 SuluTestimonialsBundle:
-    resource: '@SuluTestimonialsBundle/Resources/config/routes_admin.yml'
+    resource: '@SuluTestimonialsBundle/Resources/config/routes_admin.yaml'
 ```
 Don't forget fo add the index to your sulu_search.yaml:
 

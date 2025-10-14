@@ -7,7 +7,8 @@ namespace Manuxi\SuluTestimonialsBundle\Automation;
 use Doctrine\ORM\EntityManagerInterface;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialUnpublishedEvent;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialUnpublishedEvent as TestimonialUnpublishedEventForSearch;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialPublishedEvent as SearchPublishedEvent;
+use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialUnpublishedEvent as SearchUnpublishedEvent;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\AutomationBundle\TaskHandler\AutomationTaskHandlerInterface;
 use Sulu\Bundle\AutomationBundle\TaskHandler\TaskHandlerConfiguration;
@@ -35,16 +36,16 @@ class TestimonialUnpublishTaskHandler implements AutomationTaskHandlerInterface
         if ($entity === null) {
             return;
         }
+        $this->dispatcher->dispatch(new SearchUnpublishedEvent($entity));
 
         $entity->setPublished(false);
+        $repository->save($entity);
 
         $this->domainEventCollector->collect(
             new TestimonialUnpublishedEvent($entity, $workload)
         );
 
-        $repository->save($entity);
-
-        $this->dispatcher->dispatch(new TestimonialUnpublishedEventForSearch($entity));
+        $this->dispatcher->dispatch(new SearchPublishedEvent($entity));
     }
 
     public function configureOptionsResolver(OptionsResolver $optionsResolver): OptionsResolver

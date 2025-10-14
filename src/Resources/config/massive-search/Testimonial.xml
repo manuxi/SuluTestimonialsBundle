@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <massive-search-mapping xmlns="http://massiveart.com/schema/dic/massive-search-mapping">
     <mapping class="Manuxi\SuluTestimonialsBundle\Entity\Testimonial">
-        <index value="'testimonials' ~ (object.isPublished() ? '' : '_draft')" expr="'testimonials' ~ (object.isPublished() ? '' : '_draft')"/>
+        <index value="'testimonials' ~ (object.isPublished() ? '_published' : '')" expr="'testimonials' ~ (object.isPublished() ? '_published' : '')"/>
         <id property="id"/>
         <title expr="object.getTitle()"/>
         <description expr="object.getText()"/>

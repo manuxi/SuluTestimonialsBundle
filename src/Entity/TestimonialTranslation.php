@@ -35,10 +35,6 @@ class TestimonialTranslation implements AuditableInterface
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Testimonial::class, inversedBy: 'translations')]
-    #[ORM\JoinColumn(nullable: false)]
-    private Testimonial $testimonial;
-
     #[ORM\Column(type: Types::STRING, length: 5)]
     private string $locale;
 
@@ -48,10 +44,17 @@ class TestimonialTranslation implements AuditableInterface
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $text = null;
 
-    public function __construct(Testimonial $testimonial, string $locale)
-    {
-        $this->testimonial = $testimonial;
+    public function __construct(
+        #[ORM\ManyToOne(targetEntity: Testimonial::class, inversedBy: 'translations')]
+        #[ORM\JoinColumn(nullable: false)]
+        private readonly Testimonial $testimonial,
+        string $locale
+    ){
         $this->locale = $locale;
+    }
+
+    public function __clone(){
+        $this->id = null;
     }
 
     public function getId(): ?int
@@ -83,28 +86,6 @@ class TestimonialTranslation implements AuditableInterface
     public function setTitle(?string $title): self
     {
         $this->title = $title;
-        return $this;
-    }
-
-    public function getSubtitle(): ?string
-    {
-        return $this->subtitle;
-    }
-
-    public function setSubtitle(?string $subtitle): self
-    {
-        $this->subtitle = $subtitle;
-        return $this;
-    }
-
-    public function getSummary(): ?string
-    {
-        return $this->summary;
-    }
-
-    public function setSummary(?string $summary): self
-    {
-        $this->summary = $summary;
         return $this;
     }
 

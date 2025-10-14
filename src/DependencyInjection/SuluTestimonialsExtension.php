@@ -52,8 +52,8 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                 [
                     'indexes' => [
                         'testimonials' => [
-                            'name' => 'sulu_testimonials.search_name',
-                            'icon' => 'su-tag-pen',
+                            'name' => 'sulu_testimonials.search.index.testimonials',
+                            'icon' => 'su-comment',
                             'security_context' => Testimonial::SECURITY_CONTEXT,
                             'view' => [
                                 'name' => TestimonialsAdmin::EDIT_FORM_VIEW,
@@ -62,7 +62,18 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                     'locale' => 'locale',
                                 ],
                             ],
-
+                        ],
+                        'testimonials_published' => [
+                            'name' => 'sulu_testimonials.search.index.testimonials_published',
+                            'icon' => 'su-comment',
+                            'security_context' => Testimonial::SECURITY_CONTEXT,
+                            'view' => [
+                                'name' => TestimonialsAdmin::EDIT_FORM_VIEW,
+                                'result_to_view' => [
+                                    'id' => 'id',
+                                    'locale' => 'locale',
+                                ],
+                            ],
                         ],
                     ],
                 ]

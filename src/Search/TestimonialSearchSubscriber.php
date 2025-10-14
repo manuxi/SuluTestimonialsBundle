@@ -28,10 +28,7 @@ class TestimonialSearchSubscriber implements EventSubscriberInterface
 
     public function onPublished(TestimonialPublishedEvent $event): void
     {
-        $entity = $event->getEntity();
-        if($entity->isPublished()) {
-            $this->searchManager->index($entity);
-        }
+        $this->searchManager->index($event->getEntity());
     }
 
     public function onUnpublished(TestimonialUnpublishedEvent $event): void
@@ -41,12 +38,7 @@ class TestimonialSearchSubscriber implements EventSubscriberInterface
 
     public function onSaved(TestimonialSavedEvent $event): void
     {
-        $entity = $event->getEntity();
-        if($entity->isPublished()) {
-            $this->searchManager->index($entity);
-        } else {
-            $this->searchManager->deindex($entity);
-        }
+        $this->searchManager->index($event->getEntity());
     }
 
     public function onRemoved(TestimonialRemovedEvent $event): void

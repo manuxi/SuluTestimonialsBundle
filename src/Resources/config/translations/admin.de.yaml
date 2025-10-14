@@ -58,13 +58,16 @@ sulu_testimonials:
         title:
             navi: "Einstellungen"
             general: "Einstellungen für Einzelansicht"
-            breadcrumbs: "Zielseiten für Breadcrumbs"
+            breadcrumbs: "Zwischenseiten (Breadcrumbs)"
         properties:
             toggle_header: "Header anzeigen"
             toggle_hero: "Standard Hero anzeigen"
             toggle_breadcrumbs: "Breadcrumbs anzeigen"
             page_testimonials: "Übersichtsseite Alle Testimonials"
-
+    search:
+        index:
+            testimonials: "Testimonials (Entwurf)"
+            testimonials_published: "Testimonials"
 sulu_activity:
     resource:
         testimonials: "Testimonials"

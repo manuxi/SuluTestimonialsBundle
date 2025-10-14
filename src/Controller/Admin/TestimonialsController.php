@@ -30,7 +30,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @RouteResource("testimonial")
@@ -46,7 +45,6 @@ class TestimonialsController extends AbstractRestController implements ClassReso
         private readonly DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
         private readonly SecurityCheckerInterface          $securityChecker,
         private readonly TrashManagerInterface             $trashManager,
-        private readonly EventDispatcherInterface          $dispatcher,
         ViewHandlerInterface                               $viewHandler,
         ?TokenStorageInterface                             $tokenStorage = null
     ) {
@@ -86,7 +84,6 @@ class TestimonialsController extends AbstractRestController implements ClassReso
     public function postAction(Request $request): Response
     {
         $entity = $this->testimonialModel->create($request);
-        $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
         return $this->handleView($this->view($entity, 201));
     }
 
@@ -106,15 +103,12 @@ class TestimonialsController extends AbstractRestController implements ClassReso
             switch ($action) {
                 case 'publish':
                     $entity = $this->testimonialModel->publish($id, $request);
-                    $this->dispatcher->dispatch(new TestimonialPublishedEvent($entity));
                     break;
                 case 'unpublish':
                     $entity = $this->testimonialModel->unpublish($id, $request);
-                    $this->dispatcher->dispatch(new TestimonialUnpublishedEvent($entity));
                     break;
                 case 'copy':
                     $entity = $this->testimonialModel->copy($id, $request);
-                    $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
                     break;
                 case 'copy-locale':
                     $locale = $this->getRequestParameter($request, 'locale', true);
@@ -130,7 +124,6 @@ class TestimonialsController extends AbstractRestController implements ClassReso
                     }
 
                     $entity = $this->testimonialModel->copyLanguage($id, $request, $srcLocale, $destLocales);
-                    $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
                     break;
                 default:
                     throw new BadRequestHttpException(sprintf('Unknown action "%s".', $action));
@@ -156,8 +149,6 @@ class TestimonialsController extends AbstractRestController implements ClassReso
         $this->testimonialSeoModel->updateTestimonialSeo($entity->getSeo(), $request);
         $this->testimonialExcerptModel->updateTestimonialExcerpt($entity->getExcerpt(), $request);
 
-        $this->dispatcher->dispatch(new TestimonialSavedEvent($entity));
-
         return $this->handleView($this->view($entity));
     }
 
@@ -174,8 +165,6 @@ class TestimonialsController extends AbstractRestController implements ClassReso
         $this->trashManager->store(Testimonial::RESOURCE_KEY, $entity);
 
         $this->testimonialModel->delete($entity);
-
-        $this->dispatcher->dispatch(new TestimonialUnpublishedEvent($entity));
 
         return $this->handleView($this->view(null, 204));
     }
