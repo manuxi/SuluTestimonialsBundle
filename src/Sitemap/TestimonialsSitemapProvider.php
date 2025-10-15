@@ -12,17 +12,12 @@ use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 
 class TestimonialsSitemapProvider implements SitemapProviderInterface
 {
-    private TestimonialRepository $repository;
-    private WebspaceManagerInterface $webspaceManager;
     private array $locales = [];
 
     public function __construct(
-        TestimonialRepository $repository,
-        WebspaceManagerInterface $webspaceManager
-    ) {
-        $this->repository = $repository;
-        $this->webspaceManager = $webspaceManager;
-    }
+        private readonly TestimonialRepository $repository,
+        private readonly WebspaceManagerInterface $webspaceManager
+    ) {}
 
     public function build($page, $scheme, $host)
     {

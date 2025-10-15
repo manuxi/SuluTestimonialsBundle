@@ -53,7 +53,7 @@ class TestimonialsAdmin extends Admin
         if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
             $rootNavigationItem = new NavigationItem(static::NAV_ITEM);
             $rootNavigationItem->setIcon('su-comment');
-            $rootNavigationItem->setPosition(30);
+            $rootNavigationItem->setPosition(40);
             $rootNavigationItem->setView(static::LIST_VIEW);
 
             // Configure a NavigationItem with a View
