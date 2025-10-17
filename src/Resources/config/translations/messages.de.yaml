@@ -1,3 +1,10 @@
 sulu_testimonials:
     testimonial: "Testimonial"
     testimonials: "Testimonials"
+search:
+    index:
+        testimonials: "Testimonials"
+        testimonials_published: "Testimonials"
+    icon:
+        testimonials: "su-comment"
+        testimonials_published: "su-comment"

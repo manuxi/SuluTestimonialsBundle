@@ -1,10 +1,9 @@
 # SuluTestimonialsBundle!
 ![php workflow](https://github.com/manuxi/SuluTestimonialsBundle/actions/workflows/php.yml/badge.svg)
 ![symfony workflow](https://github.com/manuxi/SuluTestimonialsBundle/actions/workflows/symfony.yml/badge.svg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<a href="https://github.com/manuxi/SuluTestimonialsBundle/tags" target="_blank">
-<img src="https://img.shields.io/github/v/tag/manuxi/SuluTestimonialsBundle" alt="GitHub license">
-</a>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/manuxi/SuluTestimonialsBundle/LICENSE)
+![GitHub Tag](https://img.shields.io/github/v/tag/manuxi/SuluTestimonialsBundle)
+![Supports Sulu 2.6 or later](https://img.shields.io/badge/%20Sulu->=2.6-0088cc?color=00b2df)
 
 I made this bundle to have the possibility to manage testimonials in my projects.
 
