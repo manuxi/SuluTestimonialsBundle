@@ -9,10 +9,10 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\JoinColumn;
 use JMS\Serializer\Annotation as Serializer;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\ExcerptInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\ExcerptTranslatableInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ExcerptTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ExcerptTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\ExcerptInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\ExcerptTranslatableInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ExcerptTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ExcerptTranslatableTrait;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialExcerptRepository;
 
 #[ORM\Entity(repositoryClass: TestimonialExcerptRepository::class)]
@@ -24,7 +24,7 @@ class TestimonialExcerpt implements ExcerptInterface, ExcerptTranslatableInterfa
 
     #[Serializer\Exclude]
     #[ORM\OneToOne(inversedBy: 'testimonialExcerpt', targetEntity: Testimonial::class, cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(name: 'testimonial_id', referencedColumnName: "id", nullable: false)]
+    #[JoinColumn(name: 'testimonial_id', referencedColumnName: 'id', nullable: false)]
     private ?Testimonial $testimonial = null;
 
     #[Serializer\Exclude]
@@ -44,6 +44,7 @@ class TestimonialExcerpt implements ExcerptInterface, ExcerptTranslatableInterfa
     public function setTestimonial(Testimonial $testimonial): self
     {
         $this->testimonial = $testimonial;
+
         return $this;
     }
 
@@ -71,5 +72,4 @@ class TestimonialExcerpt implements ExcerptInterface, ExcerptTranslatableInterfa
 
         return $translation;
     }
-
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Entity\Models;
 
-use Manuxi\SuluTestimonialsBundle\Entity\TestimonialSeo;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ArrayPropertyTrait;
 use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\TestimonialSeoModelInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ArrayPropertyTrait;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialSeo;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialSeoRepository;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -17,7 +17,7 @@ class TestimonialSeoModel implements TestimonialSeoModelInterface
     private TestimonialSeoRepository $testimonialSeoRepository;
 
     public function __construct(
-        TestimonialSeoRepository $testimonialSeoRepository
+        TestimonialSeoRepository $testimonialSeoRepository,
     ) {
         $this->testimonialSeoRepository = $testimonialSeoRepository;
     }
@@ -25,6 +25,7 @@ class TestimonialSeoModel implements TestimonialSeoModelInterface
     public function updateTestimonialSeo(TestimonialSeo $testimonialSeo, Request $request): TestimonialSeo
     {
         $testimonialSeo = $this->mapDataToTestimonialSeo($testimonialSeo, $request->request->all()['ext']['seo']);
+
         return $this->testimonialSeoRepository->save($testimonialSeo);
     }
 
@@ -62,6 +63,7 @@ class TestimonialSeoModel implements TestimonialSeoModelInterface
         if ($hideInSitemap) {
             $entity->setHideInSitemap($hideInSitemap);
         }
+
         return $entity;
     }
 }

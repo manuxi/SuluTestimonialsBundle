@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Entity\Models;
 
-use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ArrayPropertyTrait;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialCopiedLanguageEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialCreatedEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialModifiedEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialPublishedEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialRemovedEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialUnpublishedEvent;
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\TestimonialModelInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ArrayPropertyTrait;
+use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
 use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialPublishedEvent as SearchPublishedEvent;
 use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialRemovedEvent as SearchRemovedEvent;
@@ -42,19 +41,18 @@ class TestimonialModel implements TestimonialModelInterface
         private readonly EntityManagerInterface $entityManager,
         private readonly DomainEventCollectorInterface $domainEventCollector,
         private readonly EventDispatcherInterface $dispatcher,
-    ) {}
+    ) {
+    }
 
     /**
-     * @param int $id
-     * @param Request|null $request
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
-    public function get(int $id, Request $request = null): Testimonial
+    public function get(int $id, ?Request $request = null): Testimonial
     {
-        if(null === $request) {
+        if (null === $request) {
             return $this->findById($id);
         }
+
         return $this->findByIdAndLocale($id, $request);
     }
 
@@ -70,8 +68,6 @@ class TestimonialModel implements TestimonialModelInterface
     }
 
     /**
-     * @param Request $request
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
     public function create(Request $request): Testimonial
@@ -83,12 +79,12 @@ class TestimonialModel implements TestimonialModelInterface
             new TestimonialCreatedEvent($entity, $request->request->all())
         );
 
-        //need the id for updateRoutesForEntity(), so we have to persist and flush here
+        // need the id for updateRoutesForEntity(), so we have to persist and flush here
         $entity = $this->testimonialRepository->save($entity);
 
         $this->updateRoutesForEntity($entity);
 
-        //explicit flush to save routes persisted by updateRoutesForEntity()
+        // explicit flush to save routes persisted by updateRoutesForEntity()
         $this->entityManager->flush();
 
         $this->dispatcher->dispatch(new SearchSavedEvent($entity));
@@ -97,9 +93,6 @@ class TestimonialModel implements TestimonialModelInterface
     }
 
     /**
-     * @param int $id
-     * @param Request $request
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
     public function update(int $id, Request $request): Testimonial
@@ -125,9 +118,6 @@ class TestimonialModel implements TestimonialModelInterface
     }
 
     /**
-     * @param int $id
-     * @param Request $request
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
     public function publish(int $id, Request $request): Testimonial
@@ -144,13 +134,9 @@ class TestimonialModel implements TestimonialModelInterface
         $this->dispatcher->dispatch(new SearchPublishedEvent($entity));
 
         return $entity;
-
     }
 
     /**
-     * @param int $id
-     * @param Request $request
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
     public function unpublish(int $id, Request $request): Testimonial
@@ -183,7 +169,6 @@ class TestimonialModel implements TestimonialModelInterface
         $this->dispatcher->dispatch(new SearchSavedEvent($copy));
 
         return $copy;
-
     }
 
     public function copyLanguage(int $id, Request $request, string $srcLocale, array $destLocales): Testimonial
@@ -191,11 +176,11 @@ class TestimonialModel implements TestimonialModelInterface
         $entity = $this->findById($id);
         $entity->setLocale($srcLocale);
 
-        foreach($destLocales as $destLocale) {
+        foreach ($destLocales as $destLocale) {
             $entity = $entity->copyToLocale($destLocale);
         }
 
-        //@todo: test with more than one different locale
+        // @todo: test with more than one different locale
         $entity->setLocale($this->getLocaleFromRequest($request));
 
         $this->domainEventCollector->collect(
@@ -209,9 +194,6 @@ class TestimonialModel implements TestimonialModelInterface
     }
 
     /**
-     * @param int $id
-     * @param Request $request
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
     private function findByIdAndLocale(int $id, Request $request): Testimonial
@@ -220,12 +202,11 @@ class TestimonialModel implements TestimonialModelInterface
         if (!$entity) {
             throw new EntityNotFoundException($this->testimonialRepository->getClassName(), $id);
         }
+
         return $entity;
     }
 
     /**
-     * @param int $id
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
     private function findById(int $id): Testimonial
@@ -234,6 +215,7 @@ class TestimonialModel implements TestimonialModelInterface
         if (!$entity) {
             throw new EntityNotFoundException($this->testimonialRepository->getClassName(), $id);
         }
+
         return $entity;
     }
 
@@ -243,9 +225,6 @@ class TestimonialModel implements TestimonialModelInterface
     }
 
     /**
-     * @param Testimonial $entity
-     * @param array $data
-     * @return Testimonial
      * @throws Exception|EntityNotFoundException
      */
     private function mapDataToEntity(Testimonial $entity, array $data): Testimonial
@@ -271,7 +250,7 @@ class TestimonialModel implements TestimonialModelInterface
         }
 
         $contactId = $this->getProperty($data, 'contact');
-        if(is_array($contactId) && array_key_exists('id', $contactId)) {
+        if (is_array($contactId) && array_key_exists('id', $contactId)) {
             $contactId = $this->getProperty($contactId, 'id');
         }
         if ($contactId) {
@@ -285,26 +264,26 @@ class TestimonialModel implements TestimonialModelInterface
         }
 
         $showContact = $this->getProperty($data, 'showContact');
-        $entity->setShowContact((bool)$showContact);
+        $entity->setShowContact((bool) $showContact);
 
         $showOrganisation = $this->getProperty($data, 'showOrganisation');
-        $entity->setShowOrganisation((bool)$showOrganisation);
+        $entity->setShowOrganisation((bool) $showOrganisation);
 
         $date = $this->getProperty($data, 'date');
         if ($date) {
-            $entity->setDate(new DateTime($date));
+            $entity->setDate(new \DateTime($date));
         } else {
             $entity->setDate(null);
         }
 
         $showDate = $this->getProperty($data, 'showDate');
-        $entity->setShowDate((bool)$showDate);
+        $entity->setShowDate((bool) $showDate);
 
         $rating = $this->getProperty($data, 'rating');
-        $entity->setRating($rating ? (string)$rating : null);
+        $entity->setRating($rating ? (string) $rating : null);
 
         $source = $this->getProperty($data, 'source');
-        $entity->setSource($rating ? (string)$source : null);
+        $entity->setSource($rating ? (string) $source : null);
 
         $url = $this->getProperty($data, 'url');
         $entity->setUrl($url ?: null);
@@ -324,14 +303,11 @@ class TestimonialModel implements TestimonialModelInterface
     }
 
     /**
-     * @param Testimonial $entity
-     * @param array $data
-     * @return Testimonial
      * @throws EntityNotFoundException
      */
     private function mapSettingsToEntity(Testimonial $entity, array $data): Testimonial
     {
-        //settings (author, authored) changeable
+        // settings (author, authored) changeable
         $authorId = $this->getProperty($data, 'author');
         if ($authorId) {
             $author = $this->contactRepository->findById($authorId);
@@ -345,10 +321,11 @@ class TestimonialModel implements TestimonialModelInterface
 
         $authored = $this->getProperty($data, 'authored');
         if ($authored) {
-            $entity->setAuthored(new DateTime($authored));
+            $entity->setAuthored(new \DateTime($authored));
         } else {
             $entity->setAuthored(null);
         }
+
         return $entity;
     }
 

@@ -6,16 +6,16 @@ namespace Manuxi\SuluTestimonialsBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\AuditableInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\AuditableTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ShowContactTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ShowDateTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ShowOrganisationTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\UrlTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\AuditableInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\AuditableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ShowContactTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ShowDateTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ShowOrganisationTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\UrlTrait;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialTranslationRepository;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ImageTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\PublishedTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\RouteTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ImageTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\PublishedTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\RoutePathTrait;
 
 #[ORM\Entity(repositoryClass: TestimonialTranslationRepository::class)]
 #[ORM\Table(name: 'app_testimonial_translation')]
@@ -26,7 +26,7 @@ class TestimonialTranslation implements AuditableInterface
     use ShowOrganisationTrait;
     use ShowDateTrait;
     use PublishedTrait;
-    use RouteTrait;
+    use RoutePathTrait;
     use ImageTrait;
     use UrlTrait;
 

@@ -18,17 +18,14 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
     use PersistenceExtensionTrait;
 
     /**
-     * @param array $configs
-     * @param ContainerBuilder $container
      * @throws \Exception
      */
     public function load(array $configs, ContainerBuilder $container)
     {
-
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
         $loader->load('controller.xml');
 
@@ -88,9 +85,9 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                         Testimonial::class => [
                             'generator' => 'schema',
                             'options' => [
-                                //@TODO: works not yet as expected, does not translate correctly
-                                //see https://github.com/sulu/sulu/pull/5920
-                                'route_schema' => '/{translator.trans("sulu_testimonials.testimonials")}/{implode("-", object)}'
+                                // @TODO: works not yet as expected, does not translate correctly
+                                // see https://github.com/sulu/sulu/pull/5920
+                                'route_schema' => '/{translator.trans("sulu_testimonials.testimonials")}/{implode("-", object)}',
                             ],
                             'resource_key' => Testimonial::RESOURCE_KEY,
                         ],
@@ -105,12 +102,12 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                 [
                     'lists' => [
                         'directories' => [
-                            __DIR__ . '/../Resources/config/lists',
+                            __DIR__.'/../Resources/config/lists',
                         ],
                     ],
                     'forms' => [
                         'directories' => [
-                            __DIR__ . '/../Resources/config/forms',
+                            __DIR__.'/../Resources/config/forms',
                         ],
                     ],
                     'resources' => [
@@ -134,22 +131,22 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                 'view' => [
                                     'name' => TestimonialsAdmin::EDIT_FORM_VIEW,
                                     'result_to_view' => [
-                                        'id' => 'id'
-                                    ]
+                                        'id' => 'id',
+                                    ],
                                 ],
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
                                         'list_key' => Testimonial::LIST_KEY,
                                         'display_properties' => [
-                                            'name'
+                                            'name',
                                         ],
                                         'icon' => 'su-tag-pen',
                                         'label' => 'sulu_testimonials.testimonials_selection_label',
-                                        'overlay_title' => 'sulu_testimonials.select_testimonial'
-                                    ]
-                                ]
-                            ]
+                                        'overlay_title' => 'sulu_testimonials.select_testimonial',
+                                    ],
+                                ],
+                            ],
                         ],
                         'single_selection' => [
                             'single_testimonial_selection' => [
@@ -158,29 +155,29 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                 'view' => [
                                     'name' => TestimonialsAdmin::EDIT_FORM_VIEW,
                                     'result_to_view' => [
-                                        'id' => 'id'
-                                    ]
+                                        'id' => 'id',
+                                    ],
                                 ],
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
                                         'list_key' => Testimonial::LIST_KEY,
                                         'display_properties' => [
-                                            'name'
+                                            'name',
                                         ],
                                         'icon' => 'su-tag-pen',
                                         'empty_text' => 'sulu_testimonials.no_testimonial_selected',
-                                        'overlay_title' => 'sulu_testimonials.select_testimonial'
+                                        'overlay_title' => 'sulu_testimonials.select_testimonial',
                                     ],
                                     'auto_complete' => [
                                         'display_property' => 'name',
                                         'search_properties' => [
-                                            'name'
-                                        ]
-                                    ]
-                                ]
+                                            'name',
+                                        ],
+                                    ],
+                                ],
                             ],
-                        ]
+                        ],
                     ],
                 ]
             );
@@ -188,7 +185,7 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
 
         $container->loadFromExtension('framework', [
             'default_locale' => 'en',
-            'translator' => ['paths' => [__DIR__ . '/../Resources/config/translations/']],
+            'translator' => ['paths' => [__DIR__.'/../Resources/config/translations/']],
         ]);
     }
 }

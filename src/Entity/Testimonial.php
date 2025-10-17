@@ -9,31 +9,26 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ContactTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\DateTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\PublishedTranslatableTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\AuditableTranslatableInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\AuditableTranslatableTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ShowContactTranslatableTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ShowDateTranslatableTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ShowOrganisationTranslatableTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\UrlTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\AuditableTranslatableInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\AuditableTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ContactTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\DateTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ImageTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\PublishedTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\RoutePathTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ShowContactTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ShowDateTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\ShowOrganisationTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\UrlTranslatableTrait;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\ImageTranslatableTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\RouteTranslatableTrait;
 
 #[ORM\Entity(repositoryClass: TestimonialRepository::class)]
 #[ORM\Table(name: 'app_testimonial')]
 class Testimonial implements AuditableTranslatableInterface
 {
-    public const RESOURCE_KEY = 'testimonials';
-    public const FORM_KEY = 'testimonial_details';
-    public const LIST_KEY = 'testimonials';
-    public const SECURITY_CONTEXT = 'sulu.testimonials.testimonials';
-
     use AuditableTranslatableTrait;
     use PublishedTranslatableTrait;
-    use RouteTranslatableTrait;
+    use RoutePathTranslatableTrait;
     use UrlTranslatableTrait;
     use ImageTranslatableTrait;
     use ContactTrait;
@@ -41,6 +36,10 @@ class Testimonial implements AuditableTranslatableInterface
     use ShowOrganisationTranslatableTrait;
     use DateTrait;
     use ShowDateTranslatableTrait;
+    public const RESOURCE_KEY = 'testimonials';
+    public const FORM_KEY = 'testimonial_details';
+    public const LIST_KEY = 'testimonials';
+    public const SECURITY_CONTEXT = 'sulu.testimonials.testimonials';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -78,7 +77,8 @@ class Testimonial implements AuditableTranslatableInterface
         $this->initExt();
     }
 
-    public function __clone(){
+    public function __clone()
+    {
         $this->id = null;
     }
 
@@ -87,7 +87,7 @@ class Testimonial implements AuditableTranslatableInterface
         return $this->id;
     }
 
-    #[Serializer\VirtualProperty(name: "title")]
+    #[Serializer\VirtualProperty(name: 'title')]
     public function getTitle(): ?string
     {
         $translation = $this->getTranslation($this->locale);
@@ -106,10 +106,11 @@ class Testimonial implements AuditableTranslatableInterface
         }
 
         $translation->setTitle($title);
+
         return $this;
     }
 
-    #[Serializer\VirtualProperty(name: "text")]
+    #[Serializer\VirtualProperty(name: 'text')]
     public function getText(): ?string
     {
         $translation = $this->getTranslation($this->locale);
@@ -128,6 +129,7 @@ class Testimonial implements AuditableTranslatableInterface
         }
 
         $translation->setText($text);
+
         return $this;
     }
 
@@ -139,6 +141,7 @@ class Testimonial implements AuditableTranslatableInterface
     public function setRating(string $rating): self
     {
         $this->rating = $rating;
+
         return $this;
     }
 
@@ -150,6 +153,7 @@ class Testimonial implements AuditableTranslatableInterface
     public function setSource(string $source): self
     {
         $this->source = $source;
+
         return $this;
     }
 
@@ -161,6 +165,7 @@ class Testimonial implements AuditableTranslatableInterface
     public function setShowOrganisation(bool $showOrganisation): self
     {
         $this->showOrganisation = $showOrganisation;
+
         return $this;
     }
 
@@ -173,6 +178,7 @@ class Testimonial implements AuditableTranslatableInterface
     {
         $this->locale = $locale;
         $this->propagateLocale($locale);
+
         return $this;
     }
 
@@ -197,10 +203,11 @@ class Testimonial implements AuditableTranslatableInterface
     {
         $translation = new TestimonialTranslation($this, $locale);
         $this->translations->set($locale, $translation);
+
         return $translation;
     }
 
-    #[Serializer\VirtualProperty(name: "availableLocales")]
+    #[Serializer\VirtualProperty(name: 'availableLocales')]
     public function getAvailableLocales(): array
     {
         return \array_values($this->translations->getKeys());
@@ -208,6 +215,7 @@ class Testimonial implements AuditableTranslatableInterface
 
     /**
      * @todo implement object cloning/copy
+     *
      * @return $this|null
      */
     public function copy(Testimonial $copy): ?static
@@ -216,28 +224,30 @@ class Testimonial implements AuditableTranslatableInterface
             $newTranslation = clone $currentTranslation;
             $copy->setTranslation($newTranslation);
 
-            //copy ext also...
-            foreach($this->ext as $key => $translatable) {
+            // copy ext also...
+            foreach ($this->ext as $key => $translatable) {
                 $copy->addExt($key, clone $translatable);
             }
         }
+
         return $copy;
     }
 
     public function copyToLocale(string $locale): self
     {
         if ($currentTranslation = $this->getTranslation($this->getLocale())) {
-           $newTranslation = clone $currentTranslation;
-           $newTranslation->setLocale($locale);
-           $this->translations->set($locale, $newTranslation);
+            $newTranslation = clone $currentTranslation;
+            $newTranslation->setLocale($locale);
+            $this->translations->set($locale, $newTranslation);
 
-           //copy ext also...
-           foreach($this->ext as $translatable) {
-               $translatable->copyToLocale($locale);
-           }
+            // copy ext also...
+            foreach ($this->ext as $translatable) {
+                $translatable->copyToLocale($locale);
+            }
 
-           $this->setLocale($locale);
+            $this->setLocale($locale);
         }
+
         return $this;
     }
 
@@ -254,6 +264,7 @@ class Testimonial implements AuditableTranslatableInterface
     public function setSeo(?TestimonialSeo $testimonialSeo): self
     {
         $this->testimonialSeo = $testimonialSeo;
+
         return $this;
     }
 
@@ -270,10 +281,11 @@ class Testimonial implements AuditableTranslatableInterface
     public function setExcerpt(?TestimonialExcerpt $testimonialExcerpt): self
     {
         $this->testimonialExcerpt = $testimonialExcerpt;
+
         return $this;
     }
 
-    #[Serializer\VirtualProperty(name: "ext")]
+    #[Serializer\VirtualProperty(name: 'ext')]
     public function getExt(): array
     {
         return $this->ext;
@@ -282,12 +294,14 @@ class Testimonial implements AuditableTranslatableInterface
     public function setExt(array $ext): self
     {
         $this->ext = $ext;
+
         return $this;
     }
 
     public function addExt(string $key, $value): self
     {
         $this->ext[$key] = $value;
+
         return $this;
     }
 
@@ -303,6 +317,7 @@ class Testimonial implements AuditableTranslatableInterface
         $testimonialExcerpt = $this->getExcerpt();
         $testimonialExcerpt->setLocale($locale);
         $this->initExt();
+
         return $this;
     }
 

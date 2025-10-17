@@ -9,10 +9,10 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\JoinColumn;
 use JMS\Serializer\Annotation as Serializer;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\SeoInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\SeoTranslatableInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\SeoTrait;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\SeoTranslatableTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\SeoInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\SeoTranslatableInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\SeoTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\SeoTranslatableTrait;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialSeoRepository;
 
 #[ORM\Entity(repositoryClass: TestimonialSeoRepository::class)]

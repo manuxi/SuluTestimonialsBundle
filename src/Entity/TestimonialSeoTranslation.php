@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Manuxi\SuluTestimonialsBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\SeoTranslationInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Traits\SeoTranslationTrait;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\SeoTranslationInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Traits\SeoTranslationTrait;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialSeoTranslationRepository;
 
 #[ORM\Entity(repositoryClass: TestimonialSeoTranslationRepository::class)]

@@ -7,16 +7,16 @@ namespace Manuxi\SuluTestimonialsBundle\EventListener\Doctrine;
 use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\Persistence\Event\LoadClassMetadataEventArgs;
-use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\AuthoredInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\AuthoredInterface;
 
 class AuthoredListener
 {
-    const AUTHORED_PROPERTY_NAME = 'authored';
+    public const AUTHORED_PROPERTY_NAME = 'authored';
 
     /**
      * Load the class data, mapping the created and changed fields
      * to datetime fields.
-     * @param LoadClassMetadataEventArgs $testimonial
+     *
      * @throws MappingException
      */
     public function loadClassMetadata(LoadClassMetadataEventArgs $testimonial)
@@ -24,7 +24,7 @@ class AuthoredListener
         $metadata = $testimonial->getClassMetadata();
         $reflection = $metadata->getReflectionClass();
 
-        if (null !== $reflection && $reflection->implementsInterface('Manuxi\SuluTestimonialsBundle\Entity\Interfaces\AuthoredInterface')) {
+        if (null !== $reflection && $reflection->implementsInterface('Manuxi\SuluSharedToolsBundle\Entity\Interfaces\AuthoredInterface')) {
             if (!$metadata->hasField(self::AUTHORED_PROPERTY_NAME)) {
                 $metadata->mapField([
                     'fieldName' => self::AUTHORED_PROPERTY_NAME,
@@ -37,7 +37,6 @@ class AuthoredListener
 
     /**
      * Set the timestamps before update.
-     * @param LifecycleEventArgs $testimonial
      */
     public function preUpdate(LifecycleEventArgs $testimonial)
     {
@@ -46,7 +45,6 @@ class AuthoredListener
 
     /**
      * Set the timestamps before creation.
-     * @param LifecycleEventArgs $testimonial
      */
     public function prePersist(LifecycleEventArgs $testimonial)
     {
@@ -56,7 +54,6 @@ class AuthoredListener
     /**
      * Set the timestamps. If created is NULL then set it. Always
      * set the changed field.
-     * @param LifecycleEventArgs $testimonial
      */
     private function handleTimestamp(LifecycleEventArgs $testimonial)
     {
