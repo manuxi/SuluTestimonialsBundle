@@ -99,19 +99,6 @@
             <argument type="service" id="sulu_core.webspace.webspace_manager"/>
         </service>
 
-        <!-- LISTENER -->
-        <service id="sulu_testimonials.persistence.testimonial_listener.doctrine.author" class="Manuxi\SuluTestimonialsBundle\EventListener\Doctrine\AuthorListener">
-            <argument>%sulu.model.contact.class%</argument>
-            <argument type="service" id="security.token_storage" on-invalid="null"/>
-            <tag name="doctrine.event_listener" event="loadClassMetadata"/>
-            <tag name="doctrine.event_listener" event="onFlush"/>
-        </service>
-        <service id="sulu_testimonials.persistence.testimonial_listener.doctrine.authored" class="Manuxi\SuluTestimonialsBundle\EventListener\Doctrine\AuthoredListener">
-            <tag name="doctrine.event_listener" event="loadClassMetadata"/>
-            <tag name="doctrine.event_listener" event="preUpdate"/>
-            <tag name="doctrine.event_listener" event="prePersist"/>
-        </service>
-
         <!-- MODELS -->
         <service id="sulu_testimonials.model.testimonial" class="Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialModel">
             <argument type="service" id="sulu_testimonials.repository.testimonial"/>
