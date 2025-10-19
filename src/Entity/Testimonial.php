@@ -10,6 +10,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\AuditableTranslatableInterface;
+use Manuxi\SuluSharedToolsBundle\Entity\Interfaces\SearchableInterface;
 use Manuxi\SuluSharedToolsBundle\Entity\Traits\AuditableTranslatableTrait;
 use Manuxi\SuluSharedToolsBundle\Entity\Traits\ContactTrait;
 use Manuxi\SuluSharedToolsBundle\Entity\Traits\DateTrait;
@@ -24,7 +25,7 @@ use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
 
 #[ORM\Entity(repositoryClass: TestimonialRepository::class)]
 #[ORM\Table(name: 'app_testimonial')]
-class Testimonial implements AuditableTranslatableInterface
+class Testimonial implements AuditableTranslatableInterface, SearchableInterface
 {
     use AuditableTranslatableTrait;
     use PublishedTranslatableTrait;

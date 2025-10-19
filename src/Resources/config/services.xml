@@ -149,12 +149,6 @@
             <tag name="sulu.link.provider" alias="testimonial"/>
         </service>
 
-        <!--SearchSubscriber-->
-        <service id="sulu_testimonials.search_subscriber" class="Manuxi\SuluTestimonialsBundle\Search\TestimonialSearchSubscriber">
-            <argument type="service" id="massive_search.search_manager"/>
-            <tag name="kernel.event_subscriber"/>
-        </service>
-
         <!--Trash-->
         <service id="sulu_testimonials.testimonials_trash_item_handler" class="Manuxi\SuluTestimonialsBundle\Trash\TestimonialsTrashItemHandler">
             <argument type="service" id="sulu_trash.trash_item_repository"/>
