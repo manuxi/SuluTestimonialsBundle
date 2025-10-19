@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Manuxi\SuluTestimonialsBundle\Automation;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Manuxi\SuluSharedToolsBundle\Search\Event\PreUpdatedEvent as SearchPreUpdatedEvent;
+use Manuxi\SuluSharedToolsBundle\Search\Event\UpdatedEvent as SearchUpdatedEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialUnpublishedEvent;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialPublishedEvent as SearchPublishedEvent;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialUnpublishedEvent as SearchUnpublishedEvent;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\AutomationBundle\TaskHandler\AutomationTaskHandlerInterface;
 use Sulu\Bundle\AutomationBundle\TaskHandler\TaskHandlerConfiguration;
@@ -19,11 +19,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class TestimonialUnpublishTaskHandler implements AutomationTaskHandlerInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface        $entityManager,
-        private readonly TranslatorInterface           $translator,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly TranslatorInterface $translator,
         private readonly DomainEventCollectorInterface $domainEventCollector,
-        private readonly EventDispatcherInterface      $dispatcher
-    ) {}
+        private readonly EventDispatcherInterface $dispatcher,
+    ) {
+    }
 
     public function handle($workload): void
     {
@@ -32,11 +33,11 @@ class TestimonialUnpublishTaskHandler implements AutomationTaskHandlerInterface
         }
         $class = $workload['class'];
         $repository = $this->entityManager->getRepository($class);
-        $entity = $repository->findById((int)$workload['id'], $workload['locale']);
-        if ($entity === null) {
+        $entity = $repository->findById((int) $workload['id'], $workload['locale']);
+        if (null === $entity) {
             return;
         }
-        $this->dispatcher->dispatch(new SearchUnpublishedEvent($entity));
+        $this->dispatcher->dispatch(new SearchPreUpdatedEvent($entity));
 
         $entity->setPublished(false);
         $repository->save($entity);
@@ -45,7 +46,7 @@ class TestimonialUnpublishTaskHandler implements AutomationTaskHandlerInterface
             new TestimonialUnpublishedEvent($entity, $workload)
         );
 
-        $this->dispatcher->dispatch(new SearchPublishedEvent($entity));
+        $this->dispatcher->dispatch(new SearchUpdatedEvent($entity));
     }
 
     public function configureOptionsResolver(OptionsResolver $optionsResolver): OptionsResolver
@@ -57,11 +58,11 @@ class TestimonialUnpublishTaskHandler implements AutomationTaskHandlerInterface
 
     public function supports(string $entityClass): bool
     {
-        return $entityClass === Testimonial::class || \is_subclass_of($entityClass, Testimonial::class);
+        return Testimonial::class === $entityClass || \is_subclass_of($entityClass, Testimonial::class);
     }
 
     public function getConfiguration(): TaskHandlerConfiguration
     {
-        return TaskHandlerConfiguration::create($this->translator->trans("sulu_testimonials.unpublish", [], 'admin'));
+        return TaskHandlerConfiguration::create($this->translator->trans('sulu_testimonials.unpublish', [], 'admin'));
     }
 }
