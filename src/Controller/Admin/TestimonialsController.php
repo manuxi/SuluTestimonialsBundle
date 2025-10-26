@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Controller\Admin;
 
-use Manuxi\SuluTestimonialsBundle\Common\DoctrineListRepresentationFactory;
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialExcerptModel;
-use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialModel;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\Annotations\RouteResource;
 use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\View\ViewHandlerInterface;
+use Manuxi\SuluTestimonialsBundle\Common\DoctrineListRepresentationFactory;
+use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialExcerptModel;
+use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialModel;
 use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialSeoModel;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialPublishedEvent;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialSavedEvent;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialUnpublishedEvent;
+use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Component\Rest\AbstractRestController;
 use Sulu\Component\Rest\Exception\EntityNotFoundException;
@@ -39,21 +36,21 @@ class TestimonialsController extends AbstractRestController implements ClassReso
     use RequestParametersTrait;
 
     public function __construct(
-        private readonly TestimonialModel                  $testimonialModel,
-        private readonly TestimonialSeoModel               $testimonialSeoModel,
-        private readonly TestimonialExcerptModel           $testimonialExcerptModel,
+        private readonly TestimonialModel $testimonialModel,
+        private readonly TestimonialSeoModel $testimonialSeoModel,
+        private readonly TestimonialExcerptModel $testimonialExcerptModel,
         private readonly DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
-        private readonly SecurityCheckerInterface          $securityChecker,
-        private readonly TrashManagerInterface             $trashManager,
-        ViewHandlerInterface                               $viewHandler,
-        ?TokenStorageInterface                             $tokenStorage = null
+        private readonly SecurityCheckerInterface $securityChecker,
+        private readonly TrashManagerInterface $trashManager,
+        ViewHandlerInterface $viewHandler,
+        ?TokenStorageInterface $tokenStorage = null,
     ) {
         parent::__construct($viewHandler, $tokenStorage);
     }
 
     public function cgetAction(Request $request): Response
     {
-        $locale             = $request->query->get('locale');
+        $locale = $request->query->get('locale');
         $listRepresentation = $this->doctrineListRepresentationFactory->createDoctrineListRepresentation(
             Testimonial::RESOURCE_KEY,
             [],
@@ -61,38 +58,78 @@ class TestimonialsController extends AbstractRestController implements ClassReso
         );
 
         return $this->handleView($this->view($listRepresentation));
-
     }
 
     /**
-     * @param int $id
-     * @param Request $request
-     * @return Response
      * @throws EntityNotFoundException
      */
     public function getAction(int $id, Request $request): Response
     {
         $entity = $this->testimonialModel->get($id, $request);
+
         return $this->handleView($this->view($entity));
     }
 
     /**
-     * @param Request $request
-     * @return Response
      * @throws EntityNotFoundException
      */
     public function postAction(Request $request): Response
     {
         $entity = $this->testimonialModel->create($request);
+
         return $this->handleView($this->view($entity, 201));
     }
 
     /**
-     * @Rest\Post("/testimonials/{id}")
+     * @Rest\Post("/testimonials/bulky-{action}")
      *
-     * @param int $id
-     * @param Request $request
-     * @return Response
+     * @throws MissingParameterException
+     */
+    public function bulkAction(string $action, Request $request): Response
+    {
+        if (!$this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::LIVE)) {
+            $view = $this->view([
+                'published_count' => 0,
+                'failed_ids' => [],
+                'messages' => ['Permission denied for publish'],
+            ], 403);
+
+            return $this->handleView($view);
+        }
+
+        $ids = $this->getRequestParameter($request, 'ids', false, []);
+
+        if (!is_array($ids) || empty($ids)) {
+            $view = $this->view([
+                'published_count' => 0,
+                'failed_ids' => [],
+                'messages' => ['No IDs provided'],
+            ], 400);
+
+            return $this->handleView($view);
+        }
+
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+
+        $result = match ($action) {
+            'publish' => $this->testimonialModel->publishBulk($ids, $request),
+            'unpublish' => $this->testimonialModel->unpublishBulk($ids, $request),
+            default => [],
+        };
+
+        $responseData = [
+            'published_ids' => $result,
+            'published_count' => count($result),
+        ];
+
+        $view = $this->view($responseData, 200);
+
+        return $this->handleView($view);
+    }
+
+    /**
+     * @Rest\Post("/testimonials/{id}", requirements={"id": "\d+"})
+     *
      * @throws MissingParameterException
      */
     public function postTriggerAction(int $id, Request $request): Response
@@ -130,6 +167,7 @@ class TestimonialsController extends AbstractRestController implements ClassReso
             }
         } catch (RestException $exc) {
             $view = $this->view($exc->toArray(), 400);
+
             return $this->handleView($view);
         }
 
@@ -137,9 +175,6 @@ class TestimonialsController extends AbstractRestController implements ClassReso
     }
 
     /**
-     * @param int $id
-     * @param Request $request
-     * @return Response
      * @throws EntityNotFoundException
      */
     public function putAction(int $id, Request $request): Response
@@ -153,9 +188,6 @@ class TestimonialsController extends AbstractRestController implements ClassReso
     }
 
     /**
-     * @param int $id
-     * @param Request $request
-     * @return Response
      * @throws EntityNotFoundException
      */
     public function deleteAction(int $id, Request $request): Response
@@ -173,5 +205,4 @@ class TestimonialsController extends AbstractRestController implements ClassReso
     {
         return Testimonial::SECURITY_CONTEXT;
     }
-
 }

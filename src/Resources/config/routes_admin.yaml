@@ -1,4 +1,4 @@
-app_testimonials_api:
+sulu_testimonials_api:
     type: rest
     prefix: /admin/api
     resource: Manuxi\SuluTestimonialsBundle\Controller\Admin\TestimonialsController

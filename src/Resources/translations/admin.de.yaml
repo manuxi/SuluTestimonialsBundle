@@ -52,6 +52,18 @@ sulu_testimonials:
     empty_testimoniallist: "Bitte Testimonial wählen..."
     testimonial: "Testimonial"
     testimonials: "Testimonials"
+    bulk:
+        actions: "Massen-Aktionen"
+        publish: "Veröffentlichen"
+        publish_confirm_title: "Veröffentlichen bestätigen"
+        publish_confirm_text: "{count} Einträge veröffentlichen?"
+        publish_success: "{count} Einträge wurden veröffentlicht"
+        publish_error: "Fehler beim Veröffentlichen"
+        unpublish: "Nicht mehr veröffentlichen"
+        unpublish_confirm_title: "Unveröffentlichen bestätigen"
+        unpublish_confirm_text: "{count} Einträge nicht mehr veröffentlichen?"
+        unpublish_success: "{count} Einträge wurden unveröffentlicht"
+        unpublish_error: "Fehler beim Unveröffentlichen"
 
     config:
         tab: "Einstellungen"
@@ -81,3 +93,5 @@ sulu_activity:
             unpublished: "{userFullName} hat die Veröffentlichung von Testimonial \"{resourceTitle}\" beendet."
         testimonials_settings:
             modified: "{userFullName} hat die Testimonials-Einstellungen  geändert."
+
+

@@ -6,6 +6,10 @@ namespace Manuxi\SuluTestimonialsBundle\Entity\Models;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Manuxi\SuluSharedToolsBundle\Entity\Traits\ArrayPropertyTrait;
+use Manuxi\SuluSharedToolsBundle\Search\Event\PersistedEvent as SearchPersistedEvent;
+use Manuxi\SuluSharedToolsBundle\Search\Event\PreUpdatedEvent as SearchPreUpdatedEvent;
+use Manuxi\SuluSharedToolsBundle\Search\Event\RemovedEvent as SearchRemovedEvent;
+use Manuxi\SuluSharedToolsBundle\Search\Event\UpdatedEvent as SearchUpdatedEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialCopiedLanguageEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialCreatedEvent;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialModifiedEvent;
@@ -15,10 +19,6 @@ use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialUnpublishedEvent;
 use Manuxi\SuluTestimonialsBundle\Entity\Interfaces\TestimonialModelInterface;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
-use Manuxi\SuluSharedToolsBundle\Search\Event\PersistedEvent as SearchPersistedEvent;
-use Manuxi\SuluSharedToolsBundle\Search\Event\PreUpdatedEvent as SearchPreUpdatedEvent;
-use Manuxi\SuluSharedToolsBundle\Search\Event\RemovedEvent as SearchRemovedEvent;
-use Manuxi\SuluSharedToolsBundle\Search\Event\UpdatedEvent as SearchUpdatedEvent;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\ContactBundle\Entity\ContactRepository;
 use Sulu\Bundle\MediaBundle\Entity\MediaRepositoryInterface;
@@ -115,6 +115,36 @@ class TestimonialModel implements TestimonialModelInterface
         $this->dispatcher->dispatch(new SearchUpdatedEvent($entity));
 
         return $entity;
+    }
+
+    public function publishBulk(array $ids, Request $request): array
+    {
+        $savedIds = [];
+        foreach ($ids as $id) {
+            try {
+                $entity = $this->publish($id, $request);
+                $savedIds[] = $entity->getId();
+            } catch (EntityNotFoundException $e) {
+
+            }
+        }
+
+        return $savedIds;
+    }
+
+    public function unpublishBulk(array $ids, Request $request): array
+    {
+        $savedIds = [];
+        foreach ($ids as $id) {
+            try {
+                $entity = $this->unpublish($id, $request);
+                $savedIds[] = $entity->getId();
+            } catch (EntityNotFoundException $e) {
+
+            }
+        }
+
+        return $savedIds;
     }
 
     /**

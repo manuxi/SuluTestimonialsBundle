@@ -142,6 +142,12 @@
             <argument type="service" id="translator.default"/>
         </service>
 
+        <!--Handler-->
+        <service id="sulu_testimonials.testimonial_bulk_action_handler" class="Manuxi\SuluTestimonialsBundle\Handler\TestimonialBulkActionHandler">
+            <argument type="service" id="sulu_testimonials.model.testimonial"/>
+            <tag name="sulu_bulk_actions.handler" />
+        </service>
+
         <!--Link-->
         <service id="sulu_testimonials.testimonial_link_provider" class="Manuxi\SuluTestimonialsBundle\Link\TestimonialLinkProvider">
             <argument type="service" id="sulu_testimonials.repository.testimonial"/>

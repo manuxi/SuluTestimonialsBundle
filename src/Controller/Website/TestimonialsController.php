@@ -30,23 +30,18 @@ class TestimonialsController extends AbstractController
         WebspaceManagerInterface $webspaceManager,
         TranslatorInterface $translator,
         TemplateAttributeResolverInterface $templateAttributeResolver,
-        RouteRepositoryInterface $routeRepository
+        RouteRepositoryInterface $routeRepository,
     ) {
         parent::__construct($requestStack, $mediaManager);
 
-        $this->repository                = $repository;
-        $this->webspaceManager           = $webspaceManager;
-        $this->translator                = $translator;
+        $this->repository = $repository;
+        $this->webspaceManager = $webspaceManager;
+        $this->translator = $translator;
         $this->templateAttributeResolver = $templateAttributeResolver;
-        $this->routeRepository           = $routeRepository;
+        $this->routeRepository = $routeRepository;
     }
 
     /**
-     * @param Testimonial $testimonial
-     * @param string $view
-     * @param bool $preview
-     * @param bool $partial
-     * @return Response
      * @throws \Exception
      */
     public function indexAction(Testimonial $testimonial, string $view = '@SuluTestimonials/testimonial', bool $preview = false, bool $partial = false): Response
@@ -54,15 +49,15 @@ class TestimonialsController extends AbstractController
         $viewTemplate = $this->getViewTemplate($view, $this->request, $preview);
 
         $parameters = $this->templateAttributeResolver->resolve([
-            'testimonial'   => $testimonial,
+            'testimonial' => $testimonial,
             'content' => [
                 'title' => $this->translator->trans('sulu_testimonials.testimonials'),
-                'title'  => $testimonial->getTitle(),
+                'title' => $testimonial->getTitle(),
             ],
-/*            'path'          => $testimonial->getRoutePath(),*/
-            'extension'     => $this->extractExtension($testimonial),
+            /*            'path'          => $testimonial->getRoutePath(), */
+            'extension' => $this->extractExtension($testimonial),
             'localizations' => $this->getLocalizationsArrayForEntity($testimonial),
-            'created'       => $testimonial->getCreated(),
+            'created' => $testimonial->getCreated(),
         ]);
 
         return $this->prepareResponse($viewTemplate, $parameters, $preview, $partial);
@@ -71,12 +66,12 @@ class TestimonialsController extends AbstractController
     /**
      * With the help of this method the corresponding localisations for the
      * current testimonials are found e.g. to be linked in the language switcher.
-     * @param Testimonial $testimonial
+     *
      * @return array<string, array>
      */
     protected function getLocalizationsArrayForEntity(Testimonial $testimonial): array
     {
-        $routes = $this->routeRepository->findAllByEntity(Testimonial::class, (string)$testimonial->getId());
+        $routes = $this->routeRepository->findAllByEntity(Testimonial::class, (string) $testimonial->getId());
 
         $localizations = [];
         foreach ($routes as $route) {
@@ -95,6 +90,7 @@ class TestimonialsController extends AbstractController
     private function extractExtension(Testimonial $testimonial): array
     {
         $serializer = SerializerBuilder::create()->build();
+
         return $serializer->toArray($testimonial->getExt());
     }
 
@@ -112,5 +108,4 @@ class TestimonialsController extends AbstractController
             ]
         );
     }
-
 }

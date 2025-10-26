@@ -1,0 +1,11 @@
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../SuluBulkActionsBundle"
+        }
+    ],
+    "require-dev": {
+        "manuxi/sulu-bulk-actions-bundle": "@dev"
+    }
+}

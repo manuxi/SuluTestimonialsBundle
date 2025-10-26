@@ -27,7 +27,7 @@ class TestimonialsAdmin extends Admin
     public const EDIT_FORM_DETAILS_VIEW = 'sulu_testimonials.testimonials.edit_form.details';
     public const SECURITY_CONTEXT = 'sulu.modules.testimonial';
 
-    //seo,excerpt, etc
+    // seo,excerpt, etc
     public const EDIT_FORM_VIEW_SEO = 'sulu_testimonials.edit_form.seo';
     public const EDIT_FORM_VIEW_EXCERPT = 'sulu_testimonials.edit_form.excerpt';
     public const EDIT_FORM_VIEW_SETTINGS = 'sulu_testimonials.edit_form.settings';
@@ -41,11 +41,28 @@ class TestimonialsAdmin extends Admin
     public function __construct(
         ViewBuilderFactoryInterface $viewBuilderFactory,
         SecurityCheckerInterface $securityChecker,
-        WebspaceManagerInterface $webspaceManager
+        WebspaceManagerInterface $webspaceManager,
     ) {
         $this->viewBuilderFactory = $viewBuilderFactory;
-        $this->securityChecker    = $securityChecker;
-        $this->webspaceManager    = $webspaceManager;
+        $this->securityChecker = $securityChecker;
+        $this->webspaceManager = $webspaceManager;
+    }
+
+    public function getConfigKey(): ?string
+    {
+        return 'sulu_testimonials';
+    }
+
+    public function getConfig(): ?array
+    {
+        return [
+            'resourceKey' => 'testimonials',
+            'bulkActions' => [
+                'publish' => ['icon' => 'su-eye'],
+                'unpublish' => ['icon' => 'su-eye-slash'],
+                'delete' => ['icon' => 'su-trash'],
+            ],
+        ];
     }
 
     public function configureNavigationItems(NavigationItemCollection $navigationItemCollection): void
@@ -95,6 +112,24 @@ class TestimonialsAdmin extends Admin
             $listToolbarActions[] = new ToolbarAction('sulu_admin.export');
         }
 
+        if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::LIVE)) {
+            $publishAction = new ToolbarAction('app.bulk.publish', [
+                'disable_for_empty_selection' => true,
+            ]);
+            $unpublishAction = new ToolbarAction('app.bulk.unpublish', [
+                'disable_for_empty_selection' => true,
+            ]);
+
+            $listToolbarActions[] = new ToolbarAction('app.bulk.actions_dropdown', [
+                'label' => 'sulu_bulk_actions.actions',
+                'icon' => 'su-pen',
+                'actions' => [
+                    'app.bulk.publish',
+                    'app.bulk.unpublish',
+                ],
+            ]);
+        }
+
         if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
             // Configure Testimonial List View
             $listView = $this->viewBuilderFactory
@@ -137,7 +172,7 @@ class TestimonialsAdmin extends Admin
                 ->addLocales($locales);
             $viewCollection->add($editFormView);
 
-            //publish/unpublish toolbar actions
+            // publish/unpublish toolbar actions
             $formToolbarActions = [
                 new ToolbarAction('sulu_admin.save'),
                 new ToolbarAction('sulu_admin.delete'),
@@ -159,9 +194,9 @@ class TestimonialsAdmin extends Admin
                 ->setParent(static::EDIT_FORM_VIEW);
             $viewCollection->add($editDetailsFormView);
 
-            //seo,excerpt, etc
+            // seo,excerpt, etc
             $formToolbarActionsWithoutType = [];
-            $previewCondition              = 'nodeType == 1';
+            $previewCondition = 'nodeType == 1';
 
             if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::ADD)) {
                 $listToolbarActions[] = new ToolbarAction('sulu_admin.add');
@@ -235,10 +270,5 @@ class TestimonialsAdmin extends Admin
                 ],
             ],
         ];
-    }
-
-    public function getConfigKey(): ?string
-    {
-        return 'sulu_testimonials';
     }
 }
