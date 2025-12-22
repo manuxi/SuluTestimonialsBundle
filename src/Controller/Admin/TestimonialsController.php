@@ -4,174 +4,334 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Controller\Admin;
 
-use Manuxi\SuluTestimonialsBundle\Common\DoctrineListRepresentationFactory;
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialExcerptModel;
-use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialModel;
-use FOS\RestBundle\Controller\Annotations as Rest;
-use FOS\RestBundle\Controller\Annotations\RouteResource;
-use FOS\RestBundle\Routing\ClassResourceInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\View\ViewHandlerInterface;
-use Manuxi\SuluTestimonialsBundle\Entity\Models\TestimonialSeoModel;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialPublishedEvent;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialSavedEvent;
-use Manuxi\SuluTestimonialsBundle\Search\Event\TestimonialUnpublishedEvent;
+use Manuxi\SuluTestimonialsBundle\Common\DoctrineListRepresentationFactory;
+use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialCreatedEvent;
+use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialModifiedEvent;
+use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialPublishedEvent;
+use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialRemovedEvent;
+use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialUnpublishedEvent;
+use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\TrashBundle\Application\TrashManager\TrashManagerInterface;
 use Sulu\Component\Rest\AbstractRestController;
-use Sulu\Component\Rest\Exception\EntityNotFoundException;
-use Sulu\Component\Rest\Exception\MissingParameterException;
 use Sulu\Component\Rest\Exception\RestException;
-use Sulu\Component\Rest\RequestParametersTrait;
-use Sulu\Component\Security\Authorization\PermissionTypes;
-use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
-use Sulu\Component\Security\Authorization\SecurityCondition;
-use Sulu\Component\Security\SecuredControllerInterface;
+use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactoryInterface;
+use Sulu\Component\Rest\ListBuilder\Metadata\FieldDescriptorFactoryInterface;
+use Sulu\Component\Rest\RestHelperInterface;
+use Sulu\Content\Application\ContentManager\ContentManagerInterface;
+use Sulu\Content\Application\ContentWorkflow\ContentWorkflowInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Domain\Model\WorkflowInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-/**
- * @RouteResource("testimonial")
- */
-class TestimonialsController extends AbstractRestController implements ClassResourceInterface, SecuredControllerInterface
+#[Route('/admin/api')]
+class TestimonialsController extends AbstractRestController
 {
-    use RequestParametersTrait;
-
     public function __construct(
-        private readonly TestimonialModel                  $testimonialModel,
-        private readonly TestimonialSeoModel               $testimonialSeoModel,
-        private readonly TestimonialExcerptModel           $testimonialExcerptModel,
+        ViewHandlerInterface $viewHandler,
+        TokenStorageInterface $tokenStorage,
+        private readonly FieldDescriptorFactoryInterface $fieldDescriptorFactory,
+        private readonly DoctrineListBuilderFactoryInterface $listBuilderFactory,
+        private readonly RestHelperInterface $restHelper,
+        private readonly ContentManagerInterface $contentManager,
+        private readonly EntityManagerInterface $entityManager,
         private readonly DoctrineListRepresentationFactory $doctrineListRepresentationFactory,
-        private readonly SecurityCheckerInterface          $securityChecker,
-        private readonly TrashManagerInterface             $trashManager,
-        ViewHandlerInterface                               $viewHandler,
-        ?TokenStorageInterface                             $tokenStorage = null
+        private readonly DomainEventCollectorInterface $domainEventCollector,
+        private readonly TrashManagerInterface $trashManager,
+        private readonly ContentWorkflowInterface $contentWorkflow,
     ) {
         parent::__construct($viewHandler, $tokenStorage);
     }
 
+    #[Route(
+        path: '/testimonials.{_format}',
+        name: 'sulu_testimonials.get_testimonials',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['GET']
+    )]
     public function cgetAction(Request $request): Response
     {
-        $locale             = $request->query->get('locale');
+        $limit = $request->query->getInt('limit', 10);
+        $page = $request->query->getInt('page', 1);
+        $listKey = Testimonial::LIST_KEY;
+
         $listRepresentation = $this->doctrineListRepresentationFactory->createDoctrineListRepresentation(
             Testimonial::RESOURCE_KEY,
             [],
-            ['locale' => $locale]
+            $request->query->all(),
+            $listKey
         );
 
         return $this->handleView($this->view($listRepresentation));
-
     }
 
-    /**
-     * @param int $id
-     * @param Request $request
-     * @return Response
-     * @throws EntityNotFoundException
-     */
-    public function getAction(int $id, Request $request): Response
+    #[Route(
+        path: '/testimonials/{id}.{_format}',
+        name: 'sulu_testimonials.get_testimonial',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['GET']
+    )]
+    public function getAction(Request $request, int $id): Response
     {
-        $entity = $this->testimonialModel->get($id, $request);
-        return $this->handleView($this->view($entity));
-    }
+        /** @var Testimonial|null $testimonial */
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findOneBy(['id' => $id]);
 
-    /**
-     * @param Request $request
-     * @return Response
-     * @throws EntityNotFoundException
-     */
-    public function postAction(Request $request): Response
-    {
-        $entity = $this->testimonialModel->create($request);
-        return $this->handleView($this->view($entity, 201));
-    }
-
-    /**
-     * @Rest\Post("/testimonials/{id}")
-     *
-     * @param int $id
-     * @param Request $request
-     * @return Response
-     * @throws MissingParameterException
-     */
-    public function postTriggerAction(int $id, Request $request): Response
-    {
-        $action = $this->getRequestParameter($request, 'action', true);
-
-        try {
-            switch ($action) {
-                case 'publish':
-                    $entity = $this->testimonialModel->publish($id, $request);
-                    break;
-                case 'unpublish':
-                    $entity = $this->testimonialModel->unpublish($id, $request);
-                    break;
-                case 'copy':
-                    $entity = $this->testimonialModel->copy($id, $request);
-                    break;
-                case 'copy-locale':
-                    $locale = $this->getRequestParameter($request, 'locale', true);
-                    $srcLocale = $this->getRequestParameter($request, 'src', false, $locale);
-                    $destLocales = $this->getRequestParameter($request, 'dest', true);
-                    $destLocales = explode(',', $destLocales);
-
-                    foreach ($destLocales as $destLocale) {
-                        $this->securityChecker->checkPermission(
-                            new SecurityCondition($this->getSecurityContext(), $destLocale),
-                            PermissionTypes::EDIT
-                        );
-                    }
-
-                    $entity = $this->testimonialModel->copyLanguage($id, $request, $srcLocale, $destLocales);
-                    break;
-                default:
-                    throw new BadRequestHttpException(sprintf('Unknown action "%s".', $action));
-            }
-        } catch (RestException $exc) {
-            $view = $this->view($exc->toArray(), 400);
-            return $this->handleView($view);
+        if (!$testimonial) {
+            throw new NotFoundHttpException();
         }
 
-        return $this->handleView($this->view($entity));
+        $dimensionAttributes = $this->getDimensionAttributes($request);
+        $dimensionContent = $this->contentManager->resolve($testimonial, $dimensionAttributes);
+
+        return $this->handleView($this->view($this->normalize($testimonial, $dimensionContent)));
     }
 
-    /**
-     * @param int $id
-     * @param Request $request
-     * @return Response
-     * @throws EntityNotFoundException
-     */
-    public function putAction(int $id, Request $request): Response
+    #[Route(
+        path: '/testimonials.{_format}',
+        name: 'sulu_testimonials.post_testimonial',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['POST']
+    )]
+    public function postAction(Request $request): Response
     {
-        $entity = $this->testimonialModel->update($id, $request);
+        $testimonial = new Testimonial();
 
-        $this->testimonialSeoModel->updateTestimonialSeo($entity->getSeo(), $request);
-        $this->testimonialExcerptModel->updateTestimonialExcerpt($entity->getExcerpt(), $request);
+        $data = $this->getData($request);
+        $dimensionAttributes = $this->getDimensionAttributes($request);
 
-        return $this->handleView($this->view($entity));
+        $this->entityManager->persist($testimonial);
+
+        /** @var TestimonialDimensionContent $dimensionContent */
+        $dimensionContent = $this->contentManager->persist($testimonial, $data, $dimensionAttributes);
+
+        $this->entityManager->flush();
+
+        $this->domainEventCollector->collect(new TestimonialCreatedEvent($testimonial, $data));
+
+        if ('publish' === $request->query->get('action')) {
+            $this->contentWorkflow->apply(
+                $testimonial,
+                ['locale' => $dimensionAttributes['locale']],
+                WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH
+            );
+            $dimensionContent = $this->contentManager->resolve($testimonial, $dimensionAttributes);
+            $this->entityManager->flush();
+            $this->domainEventCollector->collect(new TestimonialPublishedEvent($testimonial, $data));
+        }
+
+        return $this->handleView($this->view($this->normalize($testimonial, $dimensionContent), 201));
     }
 
-    /**
-     * @param int $id
-     * @param Request $request
-     * @return Response
-     * @throws EntityNotFoundException
-     */
-    public function deleteAction(int $id, Request $request): Response
+    #[Route(
+        path: '/testimonials/{id}.{_format}',
+        name: 'sulu_testimonials.post_testimonial_trigger',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['POST']
+    )]
+    public function postTriggerAction(int $id, Request $request): Response
     {
-        $entity = $this->testimonialModel->get($id, $request);
+        /** @var Testimonial|null $testimonial */
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findOneBy(['id' => $id]);
 
-        $this->trashManager->store(Testimonial::RESOURCE_KEY, $entity);
+        if (!$testimonial) {
+            throw new NotFoundHttpException();
+        }
 
-        $this->testimonialModel->delete($entity);
+        $dimensionAttributes = $this->getDimensionAttributes($request);
+        $action = $request->query->get('action');
 
-        return $this->handleView($this->view(null, 204));
+        switch ($action) {
+            case 'copy_locale':
+                $dimensionContent = $this->contentManager->copy(
+                    $testimonial,
+                    [
+                        'stage' => DimensionContentInterface::STAGE_DRAFT,
+                        'locale' => $request->query->get('src'),
+                    ],
+                    $testimonial,
+                    [
+                        'stage' => DimensionContentInterface::STAGE_DRAFT,
+                        'locale' => $request->query->get('dest'),
+                    ]
+                );
+
+                $this->entityManager->flush();
+
+                return $this->handleView($this->view($this->normalize($testimonial, $dimensionContent)));
+
+            case 'unpublish':
+                $this->contentWorkflow->apply(
+                    $testimonial,
+                    ['locale' => $dimensionAttributes['locale']],
+                    WorkflowInterface::WORKFLOW_TRANSITION_UNPUBLISH
+                );
+                $dimensionContent = $this->contentManager->resolve($testimonial, $dimensionAttributes);
+
+                $this->entityManager->flush();
+                $this->domainEventCollector->collect(new TestimonialUnpublishedEvent($testimonial, $request->query->all()));
+
+                return $this->handleView($this->view($this->normalize($testimonial, $dimensionContent)));
+
+            case 'remove_draft':
+                $this->contentWorkflow->apply(
+                    $testimonial,
+                    ['locale' => $dimensionAttributes['locale']],
+                    WorkflowInterface::WORKFLOW_TRANSITION_REMOVE_DRAFT
+                );
+                $dimensionContent = $this->contentManager->resolve($testimonial, $dimensionAttributes);
+
+                $this->entityManager->flush();
+
+                return $this->handleView($this->view($this->normalize($testimonial, $dimensionContent)));
+
+            case 'restore':
+                $version = (int) $request->query->get('version');
+                $dimensionContent = $this->contentManager->copy(
+                    $testimonial,
+                    [
+                        'stage' => $dimensionAttributes['stage'] ?? DimensionContentInterface::STAGE_DRAFT,
+                        'locale' => $dimensionAttributes['locale'] ?? null,
+                        'version' => $version,
+                    ],
+                    $testimonial,
+                    [
+                        'stage' => $dimensionAttributes['stage'] ?? DimensionContentInterface::STAGE_DRAFT,
+                        'locale' => $dimensionAttributes['locale'] ?? null,
+                        'version' => DimensionContentInterface::CURRENT_VERSION,
+                    ],
+                    [
+                        'ignoredAttributes' => ['url'],
+                    ]
+                );
+
+                $this->entityManager->flush();
+                $this->domainEventCollector->collect(new TestimonialModifiedEvent($testimonial, $request->query->all()));
+
+                return $this->handleView($this->view($this->normalize($testimonial, $dimensionContent)));
+
+            default:
+                throw new RestException('Unrecognized action: ' . $action);
+        }
     }
 
-    public function getSecurityContext(): string
+    #[Route(
+        path: '/testimonials/{id}.{_format}',
+        name: 'sulu_testimonials.put_testimonial',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['PUT']
+    )]
+    public function putAction(Request $request, int $id): Response
     {
-        return Testimonial::SECURITY_CONTEXT;
+        /** @var Testimonial|null $testimonial */
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findOneBy(['id' => $id]);
+
+        if (!$testimonial) {
+            throw new NotFoundHttpException();
+        }
+
+        $data = $this->getData($request);
+        $dimensionAttributes = $this->getDimensionAttributes($request);
+
+        /** @var TestimonialDimensionContent $dimensionContent */
+        $dimensionContent = $this->contentManager->persist($testimonial, $data, $dimensionAttributes);
+
+        if (WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === $dimensionContent->getWorkflowPlace()) {
+            $this->contentWorkflow->apply(
+                $testimonial,
+                ['locale' => $dimensionAttributes['locale']],
+                WorkflowInterface::WORKFLOW_TRANSITION_CREATE_DRAFT
+            );
+            $dimensionContent = $this->contentManager->resolve($testimonial, $dimensionAttributes);
+        }
+
+        $this->entityManager->flush();
+        $this->domainEventCollector->collect(new TestimonialModifiedEvent($testimonial, $data));
+
+        if ('publish' === $request->query->get('action')) {
+            $this->contentWorkflow->apply(
+                $testimonial,
+                ['locale' => $dimensionAttributes['locale']],
+                WorkflowInterface::WORKFLOW_TRANSITION_PUBLISH
+            );
+            $dimensionContent = $this->contentManager->resolve($testimonial, $dimensionAttributes);
+            $this->entityManager->flush();
+            $this->domainEventCollector->collect(new TestimonialPublishedEvent($testimonial, $data));
+        }
+
+        return $this->handleView($this->view($this->normalize($testimonial, $dimensionContent)));
     }
 
+    #[Route(
+        path: '/testimonials/{id}.{_format}',
+        name: 'sulu_testimonials.delete_testimonial',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['DELETE']
+    )]
+    public function deleteAction(Request $request, int $id): Response
+    {
+        /** @var Testimonial $testimonial */
+        $testimonial = $this->entityManager->find(Testimonial::class, $id);
+
+        if (!$testimonial) {
+            throw new NotFoundHttpException();
+        }
+
+        $testimonialId = $testimonial->getId();
+        $testimonialTitle = '';
+
+        $locale = $request->query->get('locale');
+        if ($locale) {
+            foreach ($testimonial->getDimensionContents() as $dc) {
+                if ($dc->getLocale() === $locale) {
+                    $testimonialTitle = $dc->getTitle() ?? '';
+                    break;
+                }
+            }
+        }
+
+        $this->trashManager->store(Testimonial::RESOURCE_KEY, $testimonial);
+
+        $this->entityManager->remove($testimonial);
+        $this->domainEventCollector->collect(new TestimonialRemovedEvent($testimonialId, $testimonialTitle));
+        $this->entityManager->flush();
+
+        return new Response('', 204);
+    }
+
+    protected function getDimensionAttributes(Request $request): array
+    {
+        $attributes = $request->query->all();
+        if (!isset($attributes['stage'])) {
+            $attributes['stage'] = DimensionContentInterface::STAGE_DRAFT;
+        }
+
+        return $attributes;
+    }
+
+    protected function getData(Request $request): array
+    {
+        if ('application/json' === $request->headers->get('Content-Type')) {
+            return $request->toArray();
+        }
+
+        return $request->request->all();
+    }
+
+    protected function normalize(Testimonial $testimonial, DimensionContentInterface $dimensionContent): array
+    {
+        return $this->contentManager->normalize($dimensionContent);
+    }
 }

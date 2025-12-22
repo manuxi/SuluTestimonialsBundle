@@ -2,139 +2,183 @@
 <list xmlns="http://schemas.sulu.io/list-builder/list">
     <key>testimonials</key>
 
-    <joins name="translation">
+    <joins name="dimensionContent">
         <join>
-            <entity-name>%sulu.model.testimonial_translation.class%</entity-name>
-            <field-name>%sulu.model.testimonial.class%.translations</field-name>
-            <condition>%sulu.model.testimonial_translation.class%.locale = :locale</condition>
+            <entity-name>dimensionContent</entity-name>
+            <field-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>dimensionContent.locale = :locale AND dimensionContent.stage = 'draft' AND
+                dimensionContent.version = 0
+            </condition>
         </join>
     </joins>
 
-    <joins name="contact">
+    <joins name="liveDimensionContent">
         <join>
-            <entity-name>%sulu.model.contact.class%</entity-name>
-            <field-name>%sulu.model.testimonial.class%.contact</field-name>
-            <condition>%sulu.model.testimonial.class%.contact = %sulu.model.contact.class%.id</condition>
+            <entity-name>liveDimensionContent</entity-name>
+            <field-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>liveDimensionContent.locale = :locale AND liveDimensionContent.stage = 'live'</condition>
         </join>
     </joins>
 
-    <joins name="changer" ref="translation">
+    <joins name="ghostDimensionContent">
         <join>
-            <entity-name>%sulu.model.user.class%_changer</entity-name>
-            <field-name>%sulu.model.testimonial_translation.class%.changer</field-name>
-        </join>
-        <join>
-            <entity-name>%sulu.model.contact.class%_changer</entity-name>
-            <field-name>%sulu.model.user.class%_changer.contact</field-name>
+            <entity-name>ghostDimensionContent</entity-name>
+            <field-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial.dimensionContents</field-name>
+            <method>LEFT</method>
+            <condition>ghostDimensionContent.locale = dimensionContent.ghostLocale AND ghostDimensionContent.stage =
+                'draft' AND ghostDimensionContent.version = 0 AND dimensionContent.locale IS NULL
+            </condition>
         </join>
     </joins>
 
-    <joins name="creator" ref="translation">
+    <joins name="testimonialContact" ref="dimensionContent">
         <join>
-            <entity-name>%sulu.model.user.class%_creator</entity-name>
-            <field-name>%sulu.model.testimonial_translation.class%.creator</field-name>
+            <entity-name>testimonialContact</entity-name>
+            <field-name>dimensionContent.contact</field-name>
+            <method>LEFT</method>
         </join>
+    </joins>
+
+    <joins name="creatorUser" ref="dimensionContent">
         <join>
-            <entity-name>%sulu.model.contact.class%_creator</entity-name>
-            <field-name>%sulu.model.user.class%_creator.contact</field-name>
+            <entity-name>creatorUser</entity-name>
+            <field-name>dimensionContent.creator</field-name>
+        </join>
+    </joins>
+
+    <joins name="creatorContact" ref="creatorUser">
+        <join>
+            <entity-name>creatorContact</entity-name>
+            <field-name>creatorUser.contact</field-name>
+        </join>
+    </joins>
+
+    <joins name="changerUser" ref="dimensionContent">
+        <join>
+            <entity-name>changerUser</entity-name>
+            <field-name>dimensionContent.changer</field-name>
+        </join>
+    </joins>
+
+    <joins name="changerContact" ref="changerUser">
+        <join>
+            <entity-name>changerContact</entity-name>
+            <field-name>changerUser.contact</field-name>
+        </join>
+    </joins>
+
+    <joins name="authorContact" ref="dimensionContent">
+        <join>
+            <entity-name>authorContact</entity-name>
+            <field-name>dimensionContent.author</field-name>
+        </join>
+    </joins>
+
+    <joins name="image" ref="dimensionContent">
+        <join>
+            <entity-name>Sulu\Bundle\MediaBundle\Entity\Media</entity-name>
+            <field-name>dimensionContent.image</field-name>
+            <method>LEFT</method>
         </join>
     </joins>
 
     <properties>
+
         <property name="id" visibility="no" translation="sulu_admin.id">
             <field-name>id</field-name>
-            <entity-name>%sulu.model.testimonial.class%</entity-name>
+            <entity-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial</entity-name>
         </property>
 
-        <property name="title" visibility="always" searchability="yes" translation="sulu_testimonials.title">
-            <field-name>title</field-name>
-            <entity-name>%sulu.model.testimonial_translation.class%</entity-name>
-            <joins ref="translation"/>
+        <property name="image" visibility="always" translation="sulu_testimonials.image" sortable="false">
+            <field-name>id</field-name>
+            <entity-name>Sulu\Bundle\MediaBundle\Entity\Media</entity-name>
+            <joins ref="image"/>
+            <transformer type="thumbnails"/>
         </property>
 
-        <property name="text" visibility="yes" searchability="yes" translation="sulu_testimonials.text">
-            <field-name>text</field-name>
-            <entity-name>%sulu.model.testimonial_translation.class%</entity-name>
-            <joins ref="translation"/>
-        </property>
+        <case-property name="title" translation="sulu_admin.title" visibility="always" searchability="yes">
+            <field>
+                <field-name>title</field-name>
+                <entity-name>dimensionContent</entity-name>
+                <joins ref="dimensionContent"/>
+            </field>
+            <field>
+                <field-name>title</field-name>
+                <entity-name>ghostDimensionContent</entity-name>
+                <joins ref="ghostDimensionContent"/>
+            </field>
+            <transformer type="title"/>
+        </case-property>
 
-        <concatenation-property name="contact" translation="sulu_testimonials.contact" visibility="yes" searchability="yes">
+        <concatenation-property name="contact" translation="sulu_testimonials.contact" visibility="yes"
+                                searchability="yes">
             <field>
                 <field-name>firstName</field-name>
-                <entity-name>%sulu.model.contact.class%</entity-name>
-
-                <joins ref="contact"/>
+                <entity-name>testimonialContact</entity-name>
+                <joins ref="testimonialContact"/>
             </field>
             <field>
                 <field-name>lastName</field-name>
-                <entity-name>%sulu.model.contact.class%</entity-name>
-
-                <joins ref="contact"/>
+                <entity-name>testimonialContact</entity-name>
+                <joins ref="testimonialContact"/>
             </field>
         </concatenation-property>
 
-        <property name="rating" visibility="yes" translation="sulu_testimonials.rating">
-            <field-name>rating</field-name>
-            <entity-name>%sulu.model.testimonial.class%</entity-name>
-        </property>
-
-        <property name="publishedState" translation="sulu_testimonials.published" visibility="yes" type="bool">
-            <field-name>publishedState</field-name>
-            <entity-name>%sulu.model.testimonial_translation.class%</entity-name>
-            <joins ref="translation"/>
+        <property name="publishedState" type="string" visibility="never">
+            <field-name>workflowPlace</field-name>
+            <entity-name>dimensionContent</entity-name>
         </property>
 
         <property name="publishedAt" visibility="yes" translation="sulu_testimonials.published_date" type="datetime">
-            <field-name>publishedAt</field-name>
-            <entity-name>%sulu.model.testimonial_translation.class%</entity-name>
-            <joins ref="translation"/>
+            <field-name>workflowPublished</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
+        </property>
+
+        <property name="livePublished" type="date" visibility="never">
+            <field-name>workflowPublished</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="liveDimensionContent"/>
+            <transformer type="datetime"/>
         </property>
 
         <property name="created" translation="sulu_admin.created" type="datetime" visibility="yes">
             <field-name>created</field-name>
-            <entity-name>%sulu.model.testimonial_translation.class%</entity-name>
-            <joins ref="translation"/>
-        </property>
-
-        <property name="date" translation="sulu_testimonials.date" type="datetime" visibility="no">
-            <field-name>date</field-name>
-            <entity-name>%sulu.model.testimonial.class%</entity-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
         </property>
 
         <concatenation-property name="creator" translation="sulu_admin.creator" visibility="yes" searchability="yes">
             <field>
                 <field-name>firstName</field-name>
-                <entity-name>%sulu.model.contact.class%_creator</entity-name>
-
-                <joins ref="creator"/>
+                <entity-name>creatorContact</entity-name>
+                <joins ref="creatorContact"/>
             </field>
             <field>
                 <field-name>lastName</field-name>
-                <entity-name>%sulu.model.contact.class%_creator</entity-name>
-
-                <joins ref="creator"/>
+                <entity-name>creatorContact</entity-name>
+                <joins ref="creatorContact"/>
             </field>
         </concatenation-property>
 
         <property name="changed" translation="sulu_admin.changed" type="datetime" visibility="no">
             <field-name>changed</field-name>
-            <entity-name>%sulu.model.testimonial_translation.class%</entity-name>
-
-            <joins ref="translation"/>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
         </property>
 
         <concatenation-property name="changer" translation="sulu_admin.changer" visibility="no" searchability="yes">
             <field>
                 <field-name>firstName</field-name>
-                <entity-name>%sulu.model.contact.class%_changer</entity-name>
-
-                <joins ref="changer"/>
+                <entity-name>changerContact</entity-name>
+                <joins ref="changerContact"/>
             </field>
             <field>
                 <field-name>lastName</field-name>
-                <entity-name>%sulu.model.contact.class%_changer</entity-name>
-
-                <joins ref="changer"/>
+                <entity-name>changerContact</entity-name>
+                <joins ref="changerContact"/>
             </field>
         </concatenation-property>
     </properties>

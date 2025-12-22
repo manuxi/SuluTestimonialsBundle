@@ -11,6 +11,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 class SuluTestimonialsExtension extends Extension implements PrependExtensionInterface
@@ -25,9 +26,13 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
-        $loader->load('services.xml');
-        $loader->load('controller.xml');
+        $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        // $loader->load('services.xml');
+        // $loader->load('controller.xml');
+
+        $yamlLoader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $yamlLoader->load('services.yaml');
+        $yamlLoader->load('controller.yaml');
 
         if ($container->hasParameter('kernel.bundles')) {
             /** @var string[] $bundles */
@@ -47,29 +52,19 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
             $container->prependExtensionConfig(
                 'sulu_search',
                 [
-                    'indexes' => [
-                        'testimonials' => [
-                            'name' => 'sulu_testimonials.search.index.testimonials',
-                            'icon' => 'su-comment',
-                            'security_context' => Testimonial::SECURITY_CONTEXT,
-                            'view' => [
-                                'name' => TestimonialsAdmin::EDIT_FORM_VIEW,
-                                'result_to_view' => [
-                                    'id' => 'id',
-                                    'locale' => 'locale',
+                    'admin' => [
+                        'resources' => [
+                            Testimonial::RESOURCE_KEY => [
+                                'name' => 'sulu_testimonials.testimonials',
+                                'icon' => 'su-comment',
+                                'route' => [
+                                    'name' => TestimonialsAdmin::EDIT_FORM_VIEW,
+                                    'resultToRoute' => [
+                                        'resourceId' => 'id',
+                                        'locale' => 'locale',
+                                    ],
                                 ],
-                            ],
-                        ],
-                        'testimonials_published' => [
-                            'name' => 'sulu_testimonials.search.index.testimonials_published',
-                            'icon' => 'su-comment',
-                            'security_context' => Testimonial::SECURITY_CONTEXT,
-                            'view' => [
-                                'name' => TestimonialsAdmin::EDIT_FORM_VIEW,
-                                'result_to_view' => [
-                                    'id' => 'id',
-                                    'locale' => 'locale',
-                                ],
+                                'securityContext' => Testimonial::SECURITY_CONTEXT,
                             ],
                         ],
                     ],
@@ -77,24 +72,54 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
             );
         }
 
-        if ($container->hasExtension('sulu_route')) {
+        if ($container->hasExtension('sulu_seo')) {
             $container->prependExtensionConfig(
-                'sulu_route',
+                'sulu_seo',
                 [
-                    'mappings' => [
-                        Testimonial::class => [
-                            'generator' => 'schema',
-                            'options' => [
-                                // @TODO: works not yet as expected, does not translate correctly
-                                // see https://github.com/sulu/sulu/pull/5920
-                                'route_schema' => '/{translator.trans("sulu_testimonials.testimonials")}/{implode("-", object)}',
+                    'content' => [
+                        'types' => [
+                            Testimonial::TEMPLATE_TYPE => [
+                                'template_driver' => true,
                             ],
-                            'resource_key' => Testimonial::RESOURCE_KEY,
                         ],
                     ],
                 ]
             );
         }
+
+        if ($container->hasExtension('sulu_excerpt')) {
+            $container->prependExtensionConfig(
+                'sulu_excerpt',
+                [
+                    'content' => [
+                        'types' => [
+                            Testimonial::TEMPLATE_TYPE => [
+                                'template_driver' => true,
+                            ],
+                        ],
+                    ],
+                ]
+            );
+        }
+
+        /*        if ($container->hasExtension('sulu_route')) {
+                    $container->prependExtensionConfig(
+                        'sulu_route',
+                        [
+                            'mappings' => [
+                                Testimonial::class => [
+                                    'generator' => 'schema',
+                                    'options' => [
+                                        // @TODO: works not yet as expected, does not translate correctly
+                                        // see https://github.com/sulu/sulu/pull/5920
+                                        'route_schema' => '/{translator.trans("sulu_testimonials.testimonials")}/{implode("-", object)}',
+                                    ],
+                                    'resource_key' => Testimonial::RESOURCE_KEY,
+                                ],
+                            ],
+                        ]
+                    );
+                }*/
 
         if ($container->hasExtension('sulu_admin')) {
             $container->prependExtensionConfig(
@@ -102,12 +127,20 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                 [
                     'lists' => [
                         'directories' => [
-                            __DIR__.'/../Resources/config/lists',
+                            __DIR__ . '/../Resources/config/lists',
                         ],
                     ],
                     'forms' => [
                         'directories' => [
-                            __DIR__.'/../Resources/config/forms',
+                            __DIR__ . '/../Resources/config/forms',
+                        ],
+                    ],
+                    'templates' => [
+                        Testimonial::TEMPLATE_TYPE => [
+                            'default_type' => Testimonial::TEMPLATE_TYPE,
+                            'directories' => [
+                                __DIR__ . '/../Resources/config/templates',
+                            ],
                         ],
                     ],
                     'resources' => [
@@ -185,7 +218,7 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
 
         $container->loadFromExtension('framework', [
             'default_locale' => 'en',
-            'translator' => ['paths' => [__DIR__.'/../Resources/config/translations/']],
+            'translator' => ['paths' => [__DIR__ . '/../Resources/config/translations/']],
         ]);
     }
 }

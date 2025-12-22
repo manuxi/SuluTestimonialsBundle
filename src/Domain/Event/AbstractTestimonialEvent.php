@@ -36,12 +36,12 @@ abstract class AbstractTestimonialEvent extends DomainEvent
 
     public function getResourceId(): string
     {
-        return (string)$this->testimonial->getId();
+        return (string) $this->testimonial->getId();
     }
 
     public function getResourceTitle(): ?string
     {
-        return $this->testimonial->getTitle();
+        return $this->payload['title'] ?? null;
     }
 
     public function getResourceSecurityContext(): ?string

@@ -1,0 +1,174 @@
+services:
+    # Admin Classes
+    sulu_testimonials.admin.testimonials:
+        class: Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAdmin
+        arguments:
+            - '@sulu_admin.view_builder_factory'
+            - '@sulu_content.content_view_builder_factory'
+            - '@sulu_security.security_checker'
+            - '@sulu.core.localization_manager'
+        tags:
+            - { name: sulu.admin }
+            - { name: sulu.context, context: admin }
+
+
+    sulu_testimonials.admin.settings:
+        class: Manuxi\SuluTestimonialsBundle\Admin\SettingsAdmin
+        arguments:
+            - '@sulu_admin.view_builder_factory'
+            - '@sulu_security.security_checker'
+        tags:
+            - { name: sulu.admin }
+            - { name: sulu.context, context: admin }
+
+    sulu_testimonials.doctrine_list_representation_factory:
+        class: Manuxi\SuluTestimonialsBundle\Common\DoctrineListRepresentationFactory
+        arguments:
+            - '@sulu_core.rest_helper'
+            - '@sulu_core.list_rest_helper'
+            - '@sulu_core.doctrine_list_builder_factory'
+            - '@sulu_core.list_builder.field_descriptor_factory'
+            - '@sulu_core.webspace.webspace_manager'
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository'
+            - '@sulu_media.media_manager'
+        tags:
+            - { name: sulu.context, context: admin }
+
+    # Repositories
+    Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository:
+        class: Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@sulu_content.dimension_content_query_enhancer'
+        tags:
+            - { name: doctrine.repository_service }
+
+    Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository:
+        class: Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository
+        public: true
+        # lazy: true
+        arguments:
+            - '@doctrine'
+        tags:
+            - { name: doctrine.repository_service }
+
+    sulu_testimonials.single_testimonial_selection:
+        class: Manuxi\SuluTestimonialsBundle\Content\Type\SingleTestimonialSelectionPropertyResolver
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository'
+        tags:
+            - { name: sulu_content.property_resolver, type: single_testimonial_selection }
+
+    sulu_testimonials.testimonials_selection:
+        class: Manuxi\SuluTestimonialsBundle\Content\Type\TestimonialsSelectionPropertyResolver
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository'
+        tags:
+            - { name: sulu_content.property_resolver, type: testimonials_selection }
+
+    sulu_testimonials.testimonials_data_provider:
+        class: Manuxi\SuluTestimonialsBundle\Content\TestimonialSmartContentProvider
+        arguments:
+            - '@sulu_content.query_enhancer'
+            - '@sulu_admin.smart_content_query_enhancer'
+            - '@doctrine.orm.entity_manager'
+            - '@translator.default'
+        tags:
+            - { name: sulu.smart_content.data_provider, alias: testimonials }
+
+    # Data Mapper
+    Manuxi\SuluTestimonialsBundle\Content\DataMapper\TestimonialDataMapper:
+        class: Manuxi\SuluTestimonialsBundle\Content\DataMapper\TestimonialDataMapper
+        arguments:
+            - '@doctrine.orm.entity_manager'
+        tags:
+            - { name: sulu_content.data_mapper }
+
+    # Normalizer
+    Manuxi\SuluTestimonialsBundle\Content\Normalizer\TestimonialNormalizer:
+        class: Manuxi\SuluTestimonialsBundle\Content\Normalizer\TestimonialNormalizer
+        tags:
+            - { name: sulu_content.normalizer }
+
+    # MODELS
+    sulu_testimonials.object_provider:
+        class: Manuxi\SuluTestimonialsBundle\Preview\TestimonialsObjectProvider
+        public: true
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@sulu_content.content_aggregator'
+        tags:
+            - { name: sulu_preview.object_provider, provider-key: testimonials }
+
+    Manuxi\SuluTestimonialsBundle\Routing\TestimonialsRouteDefaultsProvider:
+        class: Manuxi\SuluTestimonialsBundle\Routing\TestimonialsRouteDefaultsProvider
+        public: true
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+        tags:
+            - { name: sulu_route.defaults_provider }
+
+    sulu_testimonials.sitemap_provider:
+        class: Manuxi\SuluTestimonialsBundle\Sitemap\TestimonialsSitemapProvider
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@sulu_core.webspace.webspace_manager'
+            - '%kernel.environment%'
+        tags:
+            - { name: sulu.sitemap.provider }
+
+    sulu_testimonials.reference_store:
+        class: Manuxi\SuluTestimonialsBundle\Reference\TestimonialReferenceStore
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@event_dispatcher'
+        tags:
+            - { name: sulu_website.reference_store, key: testimonials }
+
+    sulu_testimonials.rating_selection:
+        class: Manuxi\SuluTestimonialsBundle\Service\TestimonialRatingSelect
+        public: true
+        arguments:
+            - '@translator.default'
+
+    # Link
+    sulu_testimonials.testimonial_link_provider:
+        class: Manuxi\SuluTestimonialsBundle\Link\TestimonialLinkProvider
+        arguments:
+            - '@sulu_content.content_aggregator'
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@translator.default'
+        tags:
+            - { name: sulu.link.provider, alias: testimonial }
+
+    # Trash
+    sulu_testimonials.testimonials_trash_item_handler:
+        class: Manuxi\SuluTestimonialsBundle\Trash\TestimonialsTrashItemHandler
+        arguments:
+            - '@sulu_trash.trash_item_repository'
+            - '@doctrine.orm.default_entity_manager'
+            - '@sulu_trash.doctrine_restore_helper'
+            - '@sulu_activity.domain_event_collector'
+            - '@event_dispatcher'
+        tags:
+            - { name: sulu_trash.store_trash_item_handler }
+            - { name: sulu_trash.restore_trash_item_handler }
+            - { name: sulu_trash.restore_configuration_provider }
+
+    # Twig
+    sulu_testimonials.default.twig_extension:
+        class: Manuxi\SuluTestimonialsBundle\Twig\TestimonialsTwigExtension
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+        tags:
+            - { name: twig.extension }
+
+    sulu_testimonials.settings.twig_extension:
+        class: Manuxi\SuluTestimonialsBundle\Twig\TestimonialsSettingsTwigExtension
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+        tags:
+            - { name: twig.extension }
+
+

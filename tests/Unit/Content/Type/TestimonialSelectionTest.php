@@ -4,69 +4,57 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Tests\Unit\Content\Type;
 
-use Manuxi\SuluTestimonialsBundle\Content\Type\TestimonialsSelection;
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ObjectRepository;
+use Manuxi\SuluTestimonialsBundle\Content\Type\TestimonialsSelectionPropertyResolver;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Component\Content\Compat\PropertyInterface;
+use Sulu\Content\Application\ContentResolver\Value\ContentView;
 
 class TestimonialSelectionTest extends TestCase
 {
-    private TestimonialsSelection $testimonialSelection;
-    private ObjectProphecy $testimonialRepository;
+    use ProphecyTrait;
+
+    private TestimonialsSelectionPropertyResolver $resolver;
+    private ObjectProphecy $repository;
 
     protected function setUp(): void
     {
-        $this->testimonialRepository = $this->prophesize(ObjectRepository::class);
-        $entityManager         = $this->prophesize(EntityManagerInterface::class);
-        $entityManager->getRepository(Testimonial::class)->willReturn($this->testimonialRepository->reveal());
-
-        $this->testimonialSelection = new TestimonialsSelection($entityManager->reveal());
+        $this->repository = $this->prophesize(TestimonialDimensionContentRepository::class);
+        $this->resolver = new TestimonialsSelectionPropertyResolver($this->repository->reveal());
     }
 
-    public function testNullValue(): void
+    public function testResolveEmpty(): void
     {
-        $property = $this->prophesize(PropertyInterface::class);
-        $property->getValue()->willReturn(null);
-
-        $this->assertSame([], $this->testimonialSelection->getContentData($property->reveal()));
-        $this->assertSame(['ids' => null], $this->testimonialSelection->getViewData($property->reveal()));
+        $result = $this->resolver->resolve([], 'en');
+        $this->assertInstanceOf(ContentView::class, $result);
+        $this->assertCount(0, $result->getContent());
+        // view data is not strictly defined in resolve return value interface, 
+        // but ContentView has getView().
+        $view = $result->getView();
+        $this->assertArrayHasKey('ids', $view);
+        $this->assertEmpty($view['ids']);
     }
 
-    public function testEmptyArrayValue(): void
+    public function testResolveValid(): void
     {
-        $property = $this->prophesize(PropertyInterface::class);
-        $property->getValue()->willReturn([]);
+        $ids = [45, 22];
+        $data = ['ids' => $ids];
 
-        $this->assertSame([], $this->testimonialSelection->getContentData($property->reveal()));
-        $this->assertSame(['ids' => []], $this->testimonialSelection->getViewData($property->reveal()));
-    }
+        $entity1 = $this->prophesize(TestimonialDimensionContent::class);
+        $entity2 = $this->prophesize(TestimonialDimensionContent::class);
 
-    public function testValidValue(): void
-    {
-        $property = $this->prophesize(PropertyInterface::class);
-        $property->getValue()->willReturn([45, 22]);
+        // Expect findBy usage
+        $this->repository->findBy([
+            'testimonial' => $ids,
+            'locale' => 'en'
+        ])->willReturn([$entity1->reveal(), $entity2->reveal()]);
 
-        $testimonial22 = $this->prophesize(Testimonial::class);
-        $testimonial22->getId()->willReturn(22);
+        $result = $this->resolver->resolve($data, 'en');
 
-        $testimonial45 = $this->prophesize(Testimonial::class);
-        $testimonial45->getId()->willReturn(45);
-
-        $this->testimonialRepository->findBy(['id' => [45, 22]])->willReturn([
-            $testimonial22->reveal(),
-            $testimonial45->reveal(),
-        ]);
-
-        $this->assertSame(
-            [
-                $testimonial45->reveal(),
-                $testimonial22->reveal(),
-            ],
-            $this->testimonialSelection->getContentData($property->reveal())
-        );
-        $this->assertSame(['ids' => [45, 22]], $this->testimonialSelection->getViewData($property->reveal()));
+        $this->assertInstanceOf(ContentView::class, $result);
+        $this->assertCount(2, $result->getContent());
+        $this->assertSame($ids, $result->getView()['ids']);
     }
 }

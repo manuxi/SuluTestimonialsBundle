@@ -4,42 +4,41 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Content\Type;
 
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Doctrine\ORM\EntityManagerInterface;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository;
 use Sulu\Component\Content\Compat\PropertyInterface;
 use Sulu\Component\Content\SimpleContentType;
 
 class TestimonialsSelection extends SimpleContentType
 {
-    protected EntityManagerInterface $entityManager;
-
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
-
+    public function __construct(
+        private readonly TestimonialDimensionContentRepository $repository
+    ) {
         parent::__construct('testimonial_selection', []);
     }
 
     /**
      * @param PropertyInterface $property
-     * @return Testimonial[]
+     * @return TestimonialDimensionContent[]
      */
     public function getContentData(PropertyInterface $property): array
     {
         $ids = $property->getValue();
+        $locale = $property->getStructure()->getLanguageCode();
 
         if (empty($ids)) {
             return [];
         }
 
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findBy(['id' => $ids]);
+        $items = [];
+        foreach ($ids as $id) {
+            $item = $this->repository->load($id, ['locale' => $locale]);
+            if ($item) {
+                $items[] = $item;
+            }
+        }
 
-        $idPositions = \array_flip($ids);
-        \usort($testimonial, static function (Testimonial $a, Testimonial $b) use ($idPositions) {
-            return $idPositions[$a->getId()] - $idPositions[$b->getId()];
-        });
-
-        return $testimonial;
+        return $items;
     }
 
     /**

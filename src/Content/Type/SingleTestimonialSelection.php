@@ -4,31 +4,29 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Content\Type;
 
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Doctrine\ORM\EntityManagerInterface;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository;
 use Sulu\Component\Content\Compat\PropertyInterface;
 use Sulu\Component\Content\SimpleContentType;
 
 class SingleTestimonialSelection extends SimpleContentType
 {
-    protected EntityManagerInterface $entityManager;
-
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
-
+    public function __construct(
+        private readonly TestimonialDimensionContentRepository $repository
+    ) {
         parent::__construct('single_testimonial_selection');
     }
 
-    public function getContentData(PropertyInterface $property): ?Testimonial
+    public function getContentData(PropertyInterface $property): ?TestimonialDimensionContent
     {
         $id = $property->getValue();
+        $locale = $property->getStructure()->getLanguageCode();
 
         if (empty($id)) {
             return null;
         }
 
-        return $this->entityManager->getRepository(Testimonial::class)->find($id);
+        return $this->repository->load($id, ['locale' => $locale]);
     }
 
     /**

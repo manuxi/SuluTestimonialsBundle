@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Common;
 
-use Manuxi\SuluTestimonialsBundle\Repository\TestimonialTranslationRepository;
+use Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository;
 use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
 use Sulu\Component\Rest\ListBuilder\Doctrine\DoctrineListBuilderFactory;
 use Sulu\Component\Rest\ListBuilder\Doctrine\FieldDescriptor\DoctrineFieldDescriptor;
@@ -16,41 +16,25 @@ use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 
 class DoctrineListRepresentationFactory
 {
-    private RestHelperInterface $restHelper;
-    private ListRestHelperInterface $listRestHelper;
-    private DoctrineListBuilderFactory $listBuilderFactory;
-    private FieldDescriptorFactoryInterface $fieldDescriptorFactory;
-    private WebspaceManagerInterface $webspaceManager;
-    private TestimonialTranslationRepository $testimonialTranslationRepository;
-    private MediaManagerInterface $mediaManager;
-
     public function __construct(
-        RestHelperInterface $restHelper,
-        ListRestHelperInterface $listRestHelper,
-        DoctrineListBuilderFactory $listBuilderFactory,
-        FieldDescriptorFactoryInterface $fieldDescriptorFactory,
-        WebspaceManagerInterface $webspaceManager,
-        TestimonialTranslationRepository $testimonialTranslationRepository,
-        MediaManagerInterface $mediaManager
+        private RestHelperInterface $restHelper,
+        private ListRestHelperInterface $listRestHelper,
+        private DoctrineListBuilderFactory $listBuilderFactory,
+        private FieldDescriptorFactoryInterface $fieldDescriptorFactory,
+        private WebspaceManagerInterface $webspaceManager,
+        private TestimonialDimensionContentRepository $testimonialDimensionContentRepository,
+        private MediaManagerInterface $mediaManager
     ) {
-        $this->restHelper = $restHelper;
-        $this->listRestHelper = $listRestHelper;
-        $this->listBuilderFactory = $listBuilderFactory;
-        $this->fieldDescriptorFactory = $fieldDescriptorFactory;
-        $this->webspaceManager = $webspaceManager;
-        $this->testimonialTranslationRepository = $testimonialTranslationRepository;
-        $this->mediaManager = $mediaManager;
     }
 
     public function createDoctrineListRepresentation(
         string $resourceKey,
         array $filters = [],
         array $parameters = [],
-        array  $includedFields = []
-    ): PaginatedRepresentation
-    {
+        ?string $listKey = null
+    ): PaginatedRepresentation {
         /** @var DoctrineFieldDescriptor[] $fieldDescriptors */
-        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors($resourceKey);
+        $fieldDescriptors = $this->fieldDescriptorFactory->getFieldDescriptors($listKey ?? $resourceKey);
 
         $listBuilder = $this->listBuilderFactory->create($fieldDescriptors['id']->getEntityName());
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
@@ -63,9 +47,7 @@ class DoctrineListRepresentationFactory
             $listBuilder->where($fieldDescriptors[$key], $value);
         }
 
-        foreach ($includedFields as $field) {
-            $listBuilder->addSelectField($fieldDescriptors[$field]);
-        }
+
 
         $list = $listBuilder->execute();
 
@@ -101,7 +83,8 @@ class DoctrineListRepresentationFactory
         $ids = array_filter(array_column($listeElements, 'image'));
         $images = $this->mediaManager->getFormatUrls($ids, $locale);
         foreach ($listeElements as $key => $element) {
-            if (\array_key_exists('image', $element)
+            if (
+                \array_key_exists('image', $element)
                 && $element['image']
                 && \array_key_exists($element['image'], $images)
             ) {
@@ -112,7 +95,8 @@ class DoctrineListRepresentationFactory
         return $listeElements;
     }
 
-    private function addGhostLocaleToListElements(array $listeElements, ?string $currentLocale): array {
+    private function addGhostLocaleToListElements(array $listeElements, ?string $currentLocale): array
+    {
         $availableLocales = $locales = $this->webspaceManager->getAllLocales();
         $localesCount = count($availableLocales);
         if (($key = array_search($currentLocale, $locales)) !== false) {
@@ -121,16 +105,12 @@ class DoctrineListRepresentationFactory
 
         $ids = array_filter(array_column($listeElements, 'id'));
 
-        foreach($locales as $locale) {
-            $missingLocales = $this->testimonialTranslationRepository->findMissingLocaleByIds($ids, $locale, $localesCount);
-            foreach($missingLocales as $missingLocale) {
+        foreach ($locales as $locale) {
+            $missingLocales = $this->testimonialDimensionContentRepository->findMissingLocaleByIds($ids, $locale, $localesCount);
+            foreach ($missingLocales as $missingLocale) {
                 foreach ($listeElements as $key => $element) {
-                    if ($element['id'] === (int)$missingLocale['testimonial'] && !array_key_exists('ghostLocale', $element)) {
+                    if ($element['id'] === (int) $missingLocale['testimonial'] && !array_key_exists('ghostLocale', $element)) {
                         $listeElements[$key]['ghostLocale'] = $locale;
-//                        $listeElements[$key]['localizationState'] = [
-//                            'state' => 'ghost',
-//                            'locale' => $locale
-//                        ];
                     }
                 }
             }

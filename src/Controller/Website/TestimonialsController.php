@@ -4,84 +4,122 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Controller\Website;
 
-use JMS\Serializer\SerializerBuilder;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
-use Sulu\Bundle\MediaBundle\Media\Manager\MediaManagerInterface;
-use Sulu\Bundle\RouteBundle\Entity\RouteRepositoryInterface;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Sulu\Bundle\PreviewBundle\Preview\Preview;
 use Sulu\Bundle\WebsiteBundle\Resolver\TemplateAttributeResolverInterface;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
+use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Route\Domain\Repository\RouteRepositoryInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
+use Twig\Environment;
 
-class TestimonialsController extends AbstractController
+class TestimonialsController
 {
-    private TranslatorInterface $translator;
-    private TestimonialRepository $repository;
-    private WebspaceManagerInterface $webspaceManager;
-    private TemplateAttributeResolverInterface $templateAttributeResolver;
-    private RouteRepositoryInterface $routeRepository;
-
     public function __construct(
-        RequestStack $requestStack,
-        MediaManagerInterface $mediaManager,
-        TestimonialRepository $repository,
-        WebspaceManagerInterface $webspaceManager,
-        TranslatorInterface $translator,
-        TemplateAttributeResolverInterface $templateAttributeResolver,
-        RouteRepositoryInterface $routeRepository
+        private readonly Environment $twig,
+        private readonly TemplateAttributeResolverInterface $templateAttributeResolver,
+        private readonly RouteRepositoryInterface $routeRepository,
+        private readonly WebspaceManagerInterface $webspaceManager,
+        private readonly RequestStack $requestStack,
+        private readonly ContentAggregatorInterface $contentAggregator,
     ) {
-        parent::__construct($requestStack, $mediaManager);
-
-        $this->repository                = $repository;
-        $this->webspaceManager           = $webspaceManager;
-        $this->translator                = $translator;
-        $this->templateAttributeResolver = $templateAttributeResolver;
-        $this->routeRepository           = $routeRepository;
     }
 
-    /**
-     * @param Testimonial $testimonial
-     * @param string $view
-     * @param bool $preview
-     * @param bool $partial
-     * @return Response
-     * @throws \Exception
-     */
-    public function indexAction(Testimonial $testimonial, string $view = '@SuluTestimonials/testimonial', bool $preview = false, bool $partial = false): Response
-    {
-        $viewTemplate = $this->getViewTemplate($view, $this->request, $preview);
+    public function indexAction(
+        Testimonial $testimonial,
+        string $view = '@SuluTestimonials/testimonial',
+        bool $preview = false,
+        bool $partial = false,
+    ): Response {
+        $request = $this->requestStack->getCurrentRequest();
+        $locale = $request ? $request->getLocale() : 'en';
+
+        // Use ContentAggregator to properly resolve DimensionContent
+        // This handles merging unlocalized + localized content correctly
+        $stage = $preview ? DimensionContentInterface::STAGE_DRAFT : DimensionContentInterface::STAGE_LIVE;
+
+        /** @var TestimonialDimensionContent|null $content */
+        $content = $this->contentAggregator->aggregate(
+            $testimonial,
+            [
+                'locale' => $locale,
+                'stage' => $stage,
+            ]
+        );
+
+        if (!$content || !$content->getTitle()) {
+            // Fallback: Try to find directly in collection (for preview with injected content)
+            $content = $this->findDimensionContentInCollection($testimonial, $locale, $stage);
+        }
+
+        if (!$content) {
+            throw new NotAcceptableHttpException(sprintf('No content found for locale "%s".', $locale));
+        }
 
         $parameters = $this->templateAttributeResolver->resolve([
-            'testimonial'   => $testimonial,
-            'content' => [
-                'title' => $this->translator->trans('sulu_testimonials.testimonials'),
-                'title'  => $testimonial->getTitle(),
-            ],
-/*            'path'          => $testimonial->getRoutePath(),*/
-            'extension'     => $this->extractExtension($testimonial),
+            'testimonial' => $content,
             'localizations' => $this->getLocalizationsArrayForEntity($testimonial),
-            'created'       => $testimonial->getCreated(),
         ]);
 
-        return $this->prepareResponse($viewTemplate, $parameters, $preview, $partial);
+        $viewTemplate = $view . '.html.twig';
+
+        if (!$this->twig->getLoader()->exists($viewTemplate)) {
+            throw new NotAcceptableHttpException(\sprintf('Template "%s" does not exist.', $viewTemplate));
+        }
+
+        if ($partial) {
+            $twigTemplate = $this->twig->load($viewTemplate);
+            $content = $twigTemplate->renderBlock('content', $this->twig->mergeGlobals($parameters));
+        } elseif ($preview) {
+            $parameters['previewParentTemplate'] = $viewTemplate;
+            $parameters['previewContentReplacer'] = Preview::CONTENT_REPLACER;
+            $content = $this->twig->render('@SuluWebsite/Preview/preview.html.twig', $parameters);
+        } else {
+            $content = $this->twig->render($viewTemplate, $parameters);
+        }
+
+        return new Response($content);
     }
 
     /**
-     * With the help of this method the corresponding localisations for the
-     * current testimonials are found e.g. to be linked in the language switcher.
-     * @param Testimonial $testimonial
-     * @return array<string, array>
+     * Fallback method to find DimensionContent in the Testimonial's collection.
+     * Used when ContentAggregator doesn't return content (e.g., during preview).
      */
+    private function findDimensionContentInCollection(Testimonial $testimonial, string $locale, string $stage): ?TestimonialDimensionContent
+    {
+        foreach ($testimonial->getDimensionContents() as $dimensionContent) {
+            if ($dimensionContent->getLocale() === $locale && $dimensionContent->getStage() === $stage) {
+                return $dimensionContent;
+            }
+        }
+
+        // Try draft stage if live not found
+        if ($stage === DimensionContentInterface::STAGE_LIVE) {
+            foreach ($testimonial->getDimensionContents() as $dimensionContent) {
+                if ($dimensionContent->getLocale() === $locale && $dimensionContent->getStage() === DimensionContentInterface::STAGE_DRAFT) {
+                    return $dimensionContent;
+                }
+            }
+        }
+
+        return null;
+    }
+
     protected function getLocalizationsArrayForEntity(Testimonial $testimonial): array
     {
-        $routes = $this->routeRepository->findAllByEntity(Testimonial::class, (string)$testimonial->getId());
+        $routes = $this->routeRepository->findBy([
+            'resourceKey' => Testimonial::RESOURCE_KEY,
+            'resourceId' => (string) $testimonial->getId(),
+        ]);
 
         $localizations = [];
         foreach ($routes as $route) {
             $url = $this->webspaceManager->findUrlByResourceLocator(
-                $route->getPath(),
+                $route->getSlug(),
                 null,
                 $route->getLocale()
             );
@@ -91,26 +129,4 @@ class TestimonialsController extends AbstractController
 
         return $localizations;
     }
-
-    private function extractExtension(Testimonial $testimonial): array
-    {
-        $serializer = SerializerBuilder::create()->build();
-        return $serializer->toArray($testimonial->getExt());
-    }
-
-    /**
-     * @return string[]
-     */
-    public static function getSubscribedServices(): array
-    {
-        return array_merge(
-            parent::getSubscribedServices(),
-            [
-                WebspaceManagerInterface::class,
-                RouteRepositoryInterface::class,
-                TemplateAttributeResolverInterface::class,
-            ]
-        );
-    }
-
 }

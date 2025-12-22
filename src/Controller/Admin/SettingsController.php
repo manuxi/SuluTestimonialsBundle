@@ -6,8 +6,6 @@ namespace Manuxi\SuluTestimonialsBundle\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\View\ViewHandlerInterface;
-use HandcraftedInTheAlps\RestRoutingBundle\Controller\Annotations\RouteResource;
-use HandcraftedInTheAlps\RestRoutingBundle\Routing\ClassResourceInterface;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\Settings\ModifiedEvent;
 use Manuxi\SuluTestimonialsBundle\Entity\TestimonialsSettings;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
@@ -15,13 +13,12 @@ use Sulu\Component\Rest\AbstractRestController;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 
-/**
- * @RouteResource("testimonials-settings")
- */
-class SettingsController extends AbstractRestController implements ClassResourceInterface, SecuredControllerInterface
+#[Route('/admin/api')]
+class SettingsController extends AbstractRestController implements SecuredControllerInterface
 {
     private EntityManagerInterface $entityManager;
     private DomainEventCollectorInterface $domainEventCollector;
@@ -38,6 +35,13 @@ class SettingsController extends AbstractRestController implements ClassResource
         parent::__construct($viewHandler, $tokenStorage);
     }
 
+    #[Route(
+        path: '/testimonials-settings.{_format}',
+        name: 'sulu_testimonials.get_testimonials-settings',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['GET']
+    )]
     public function getAction(): Response
     {
         $entity = $this->entityManager->getRepository(TestimonialsSettings::class)->findOneBy([]);
@@ -45,6 +49,13 @@ class SettingsController extends AbstractRestController implements ClassResource
         return $this->handleView($this->view($this->getDataForEntity($entity ?: new TestimonialsSettings())));
     }
 
+    #[Route(
+        path: '/testimonials-settings.{_format}',
+        name: 'sulu_testimonials.put_testimonials-settings',
+        options: ['expose' => true],
+        defaults: ['_format' => 'json'],
+        methods: ['PUT']
+    )]
     public function putAction(Request $request): Response
     {
         $entity = $this->entityManager->getRepository(TestimonialsSettings::class)->findOneBy([]);

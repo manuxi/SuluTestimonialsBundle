@@ -4,48 +4,43 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Tests\Unit\Content\Type;
 
-use Manuxi\SuluTestimonialsBundle\Content\Type\SingleTestimonialSelection;
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ObjectRepository;
+use Manuxi\SuluTestimonialsBundle\Content\Type\SingleTestimonialSelectionPropertyResolver;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Sulu\Component\Content\Compat\PropertyInterface;
+use Sulu\Content\Application\ContentResolver\Value\ContentView;
 
 class SingleTestimonialSelectionTest extends TestCase
 {
-    private SingleTestimonialSelection $singleTestimonialSelection;
+    use ProphecyTrait;
 
-    private ObjectProphecy $testimonialRepository;
+    private SingleTestimonialSelectionPropertyResolver $resolver;
+    private ObjectProphecy $repository;
 
     protected function setUp(): void
     {
-        $this->testimonialRepository = $this->prophesize(ObjectRepository::class);
-        $entityManager         = $this->prophesize(EntityManagerInterface::class);
-        $entityManager->getRepository(Testimonial::class)->willReturn($this->testimonialRepository->reveal());
-
-        $this->singleTestimonialSelection = new SingleTestimonialSelection($entityManager->reveal());
+        $this->repository = $this->prophesize(TestimonialDimensionContentRepository::class);
+        $this->resolver = new SingleTestimonialSelectionPropertyResolver($this->repository->reveal());
     }
 
-    public function testNullValue(): void
+    public function testResolveNull(): void
     {
-        $property = $this->prophesize(PropertyInterface::class);
-        $property->getValue()->willReturn(null);
-
-        $this->assertNull($this->singleTestimonialSelection->getContentData($property->reveal()));
-        $this->assertSame(['id' => null], $this->singleTestimonialSelection->getViewData($property->reveal()));
+        $result = $this->resolver->resolve(null, 'en');
+        $this->assertInstanceOf(ContentView::class, $result);
+        $this->assertNull($result->getContent());
     }
 
-    public function testValidValue(): void
+    public function testResolveValid(): void
     {
-        $property = $this->prophesize(PropertyInterface::class);
-        $property->getValue()->willReturn(45);
+        $entity = $this->prophesize(TestimonialDimensionContent::class);
+        $this->repository->load('45', ['locale' => 'en'])->willReturn($entity->reveal());
 
-        $testimonial45 = $this->prophesize(Testimonial::class);
+        $result = $this->resolver->resolve(45, 'en');
 
-        $this->testimonialRepository->find(45)->willReturn($testimonial45->reveal());
-
-        $this->assertSame($testimonial45->reveal(), $this->singleTestimonialSelection->getContentData($property->reveal()));
-        $this->assertSame(['id' => 45], $this->singleTestimonialSelection->getViewData($property->reveal()));
+        $this->assertInstanceOf(ContentView::class, $result);
+        $this->assertSame($entity->reveal(), $result->getContent());
+        $this->assertSame(['id' => 45], $result->getView());
     }
 }

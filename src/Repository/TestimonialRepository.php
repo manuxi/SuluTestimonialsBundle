@@ -4,329 +4,277 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Repository;
 
-use Doctrine\Common\Collections\Criteria;
-use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use Sulu\Component\SmartContent\Orm\DataProviderRepositoryInterface;
-use Sulu\Component\SmartContent\Orm\DataProviderRepositoryTrait;
+use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
+use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Sulu\Content\Domain\Model\DimensionContentInterface;
+use Sulu\Content\Domain\Model\WorkflowInterface;
+use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
+use Webmozart\Assert\Assert;
 
-/**
- * @method Testimonial|null find($id, $lockMode = null, $lockVersion = null)
- * @method Testimonial|null findOneBy(array $criteria, array $orderBy = null)
- * @method Testimonial[]    findAll()
- * @method Testimonial[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- *
- * @extends ServiceEntityRepository<Testimonial>
- */
-class TestimonialRepository extends ServiceEntityRepository implements DataProviderRepositoryInterface
+class TestimonialRepository extends ServiceEntityRepository
 {
-    use DataProviderRepositoryTrait {
-        findByFilters as protected parentFindByFilters;
-    }
+    public const GROUP_SELECT_TESTIMONIAL_ADMIN = 'testimonial_admin';
+    public const GROUP_SELECT_TESTIMONIAL_WEBSITE = 'testimonial_website';
 
-    public function __construct(ManagerRegistry $registry)
-    {
+    public const SELECT_TESTIMONIAL_CONTENT = 'with-testimonial-content';
+
+    private const SELECTS = [
+        self::GROUP_SELECT_TESTIMONIAL_ADMIN => [
+            self::SELECT_TESTIMONIAL_CONTENT => [
+                DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_ADMIN => true,
+            ],
+        ],
+        self::GROUP_SELECT_TESTIMONIAL_WEBSITE => [
+            self::SELECT_TESTIMONIAL_CONTENT => [
+                DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_WEBSITE => true,
+            ],
+        ],
+    ];
+
+    public function __construct(
+        ManagerRegistry $registry,
+        private DimensionContentQueryEnhancer $dimensionContentQueryEnhancer,
+    ) {
         parent::__construct($registry, Testimonial::class);
     }
 
-    public function create(string $locale): Testimonial
+    public function findById(int $id): ?Testimonial
     {
-        $entity = new Testimonial();
-        $entity->setLocale($locale);
-
-        return $entity;
+        return $this->find($id);
     }
 
-    public function remove(int $id): void
+    public function findByIds(array $ids, string $locale, string $stage = DimensionContentInterface::STAGE_LIVE): array
     {
-        /** @var object $entity */
-        $entity = $this->getEntityManager()->getReference(
-            $this->getClassName(),
-            $id
+        $qb = $this->buildQueryBuilder(
+            ['ids' => $ids, 'locale' => $locale, 'stage' => $stage],
+            [], // sort
+            [self::GROUP_SELECT_TESTIMONIAL_WEBSITE => true]
         );
 
-        $this->getEntityManager()->remove($entity);
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findAllByLocale(string $locale, string $stage = DimensionContentInterface::STAGE_LIVE): array
+    {
+        $qb = $this->buildQueryBuilder(
+            ['locale' => $locale, 'stage' => $stage],
+            [], // sort
+            [self::GROUP_SELECT_TESTIMONIAL_WEBSITE => true]
+        );
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function save(Testimonial $testimonial): void
+    {
+        $this->getEntityManager()->persist($testimonial);
         $this->getEntityManager()->flush();
     }
 
-    public function save(Testimonial $entity): Testimonial
+    public function add(Testimonial $testimonial): void
     {
-        $this->getEntityManager()->persist($entity);
-        $this->getEntityManager()->flush();
-        return $entity;
+        $this->getEntityManager()->persist($testimonial);
     }
 
-    public function findById(int $id, string $locale): ?Testimonial
+    public function remove(Testimonial $testimonial): void
     {
-        $entity = $this->find($id);
-
-        if (!$entity) {
-            return null;
-        }
-
-        $entity->setLocale($locale);
-
-        return $entity;
-    }
-
-    public function findAllForSitemap(string $locale, int $limit = null, int $offset = null): array
-    {
-        $queryBuilder = $this->createQueryBuilder('testimonial')
-            ->leftJoin('testimonial.translations', 'translation')
-            ->where('translation.published = :published')
-            ->setParameter('published', true)
-            ->andWhere('translation.locale = :locale')
-            ->setParameter('locale', $locale)
-            ->orderBy('translation.publishedAt', 'DESC')
-            ->setMaxResults($limit)
-            ->setFirstResult($offset);
-
-        $this->prepareFilter($queryBuilder, []);
-
-        $testimonials = $queryBuilder->getQuery()->getResult();
-        if (!$testimonials) {
-            return [];
-        }
-        return $testimonials;
-    }
-
-    public function countForSitemap(string $locale)
-    {
-        $query = $this->createQueryBuilder('testimonial')
-            ->select('count(testimonial)')
-            ->leftJoin('testimonial.translations', 'translation')
-            ->where('translation.published = :published')
-            ->setParameter('published', true)
-            ->andWhere('translation.locale = :locale')
-            ->setParameter('locale', $locale);
-        return $query->getQuery()->getSingleScalarResult();
-    }
-
-    protected function appendJoins(QueryBuilder $queryBuilder, $alias, $locale): void
-    {
-
+        $this->getEntityManager()->remove($testimonial);
     }
 
     /**
-     * @param QueryBuilder $queryBuilder
-     * @param string $alias
+     * @param array{
+     *     locale?: string|null,
+     *     stage?: string|null,
+     *     limit?: int,
+     *     offset?: int,
+     *     id?: int,
+     *     ids?: int[],
+     *     categoryIds?: int[],
+     *     tagIds?: int[],
+     *     sortBy?: string,
+     *     sortMethod?: 'asc'|'desc',
+     * } $filters
+     * @param int|null $page
+     * @param int|null $pageSize
+     * @param int|null $limit
      * @param string $locale
-     * @param mixed[] $options
-     *
-     * @return string[]
+     * @param array $options
      */
-    protected function append(QueryBuilder $queryBuilder, string $alias, string $locale, $options = []): array
-    {
-        //$queryBuilder->andWhere($alias . '.translation.published = true');
-        $queryBuilder->innerJoin($alias . '.translations', 'translation', Join::WITH, 'translation.locale = :locale');
-        $queryBuilder->setParameter('locale', $locale);
-        $queryBuilder->andWhere('translation.published = :published');
-        $queryBuilder->setParameter('published', true);
-        return [];
-    }
-
-    public function appendCategoriesRelation(QueryBuilder $queryBuilder, $alias)
-    {
-        return $alias . '.category';
-        //$queryBuilder->addSelect($alias.'.category');
-    }
-
-    protected function appendSortByJoins(QueryBuilder $queryBuilder, string $alias, string $locale): void
-    {
-        $queryBuilder->innerJoin($alias . '.translations', 'translation', Join::WITH, 'translation.locale = :locale');
-        $queryBuilder->setParameter('locale', $locale);
-    }
-
     public function findByFilters($filters, $page, $pageSize, $limit, $locale, $options = []): array
     {
-        $entities = $this->getPublishedTestimonials($filters, $locale, $page, $pageSize, $limit, $options);
+        $filters['locale'] = $locale;
+        $filters['stage'] = $options['stage'] ?? DimensionContentInterface::STAGE_LIVE;
+        $filters['limit'] = $limit;
+        $filters['offset'] = ($page - 1) * $limit; // Check if page is 1-based usually
 
-        return \array_map(
-            function (Testimonial $entity) use ($locale) {
-                return $entity->setLocale($locale);
-            },
-            $entities
-        );
-    }
-
-    public function hasNextPage(array $filters, ?int $page, ?int $pageSize, ?int $limit, string $locale, array $options = []): bool
-    {
-        $pageCurrent = (key_exists('page', $options)) ? (int)$options['page'] : 0;
-        $totalArticles = $this->createQueryBuilder('n')
-            ->select('count(n.id)')
-            ->leftJoin('n.translations', 'translation')
-            ->where('translation.published = :published')
-            ->setParameter('published', true)
-            ->andWhere('translation.locale = :locale')
-            ->setParameter('locale', $locale)
-            ->getQuery()
-            ->getSingleScalarResult();
-
-        if ((int)($limit * $pageCurrent) + $limit < (int)$totalArticles) return true; else return false;
-
-    }
-
-    public function getPublishedTestimonials(array $filters, string $locale, ?int $page, $pageSize, $limit = null, array $options): array
-    {
-        $pageCurrent = (key_exists('page', $options)) ? (int)$options['page'] : 0;
-
-        $queryBuilder = $this->createQueryBuilder('testimonial')
-            ->leftJoin('testimonial.translations', 'translation')
-            ->where('translation.published = :published')
-            ->setParameter('published', true)
-            ->andWhere('translation.locale = :locale')
-            ->setParameter('locale', $locale)
-            ->orderBy('translation.publishedAt', 'DESC')
-            ->setMaxResults($limit)
-            ->setFirstResult($pageCurrent * $limit);
-
-        $this->prepareFilter($queryBuilder, $filters);
-
-        $testimonial = $queryBuilder->getQuery()->getResult();
-        if (!$testimonial) {
-            return [];
-        }
-        return $testimonial;
-    }
-
-    private function prepareFilter(QueryBuilder $queryBuilder, array $filters): void
-    {
+        // SmartContent passes filters as array.
+        // We map SmartContent filters to buildQueryBuilder filters
         if (isset($filters['sortBy'])) {
-            $queryBuilder->orderBy($filters['sortBy'], $filters['sortMethod']);
-        }
-
-        if (!empty($filters['tags']) || !empty($filters['categories'])) {
-            $queryBuilder->leftJoin('testimonial.testimonialExcerpt', 'excerpt')
-                ->leftJoin('excerpt.translations', 'excerpt_translation');
-        }
-
-        $this->prepareTagsFilter($queryBuilder, $filters);
-        $this->prepareCategoriesFilter($queryBuilder, $filters);
-    }
-
-    private function prepareTagsFilter(QueryBuilder $queryBuilder, array $filters): void
-    {
-        if (empty($filters['tags'])) {
-            return;
-        }
-
-        $operator = $filters['tagOperator'] ?? 'or';
-
-        if ($operator === 'and') {
-            // AND: Entity must have ALL tags (multiple JOINs necessary)
-            foreach ($filters['tags'] as $i => $tag) {
-                $alias = 'tag' . $i;
-                $queryBuilder
-                    ->innerJoin('excerpt_translation.tags', $alias)
-                    ->andWhere($queryBuilder->expr()->eq($alias . '.id', ':tag' . $i))
-                    ->setParameter('tag' . $i, $tag);
-            }
+            $sortBys = [$filters['sortBy'] => $filters['sortMethod'] ?? 'asc'];
         } else {
-            // OR: Entity must at least have one of the tags
-            $queryBuilder
-                ->leftJoin('excerpt_translation.tags', 'tags')
-                ->andWhere($queryBuilder->expr()->in('tags.id', ':tags'))
-                ->setParameter('tags', $filters['tags']);
+            $sortBys = [];
         }
+
+        $selects = [self::GROUP_SELECT_TESTIMONIAL_WEBSITE => true];
+
+        $qb = $this->buildQueryBuilder($filters, $sortBys, $selects);
+
+        return $qb->getQuery()->getResult();
     }
 
-    private function prepareCategoriesFilter(QueryBuilder $queryBuilder, array $filters): void
+    public function findAllForSitemap(string $locale, ?int $limit = null, ?int $offset = null): array
     {
-        if (empty($filters['categories'])) {
-            return;
-        }
+        $filters = [
+            'locale' => $locale,
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+            'limit' => $limit,
+            'offset' => $offset,
+            'published' => true,
+        ];
 
-        $operator = $filters['categoryOperator'] ?? 'or';
-
-        if ($operator === 'and') {
-            // AND: Entity must have ALL categories (multiple JOINs necessary)
-            $queryBuilder->leftJoin('excerpt_translation.categories', 'categories');
-
-            foreach ($filters['categories'] as $i => $category) {
-                $alias = 'category' . $i;
-                $queryBuilder
-                    ->innerJoin('excerpt_translation.categories', $alias)
-                    ->andWhere($queryBuilder->expr()->eq($alias . '.id', ':category' . $i))
-                    ->setParameter('category' . $i, $category);
-            }
-        } else {
-            // OR: Entity must at least have one of the categories
-            $queryBuilder
-                ->leftJoin('excerpt_translation.categories', 'categories')
-                ->andWhere($queryBuilder->expr()->in('categories.id', ':categories'))
-                ->setParameter('categories', $filters['categories']);
-        }
+        return $this->buildQueryBuilder($filters, ['created' => 'desc'])->getQuery()->getResult();
     }
 
-    private function prepareTagsFilterX(QueryBuilder $queryBuilder, array $filters):void
+    public function countForSitemap(string $locale): int
     {
-        if (!empty($filters['tags'])) {
-
-            $queryBuilder->leftJoin('excerpt_translation.tags', 'tags');
-
-            $i = 0;
-            if ($filters['tagOperator'] === "and") {
-                $andWhere = "";
-                foreach ($filters['tags'] as $tag) {
-                    if ($i === 0) {
-                        $andWhere .= "tags = :tag" . $i;
-                    } else {
-                        $andWhere .= " AND tags = :tag" . $i;
-                    }
-                    $queryBuilder->setParameter("tag" . $i, $tag);
-                    $i++;
-                }
-                $queryBuilder->andWhere($andWhere);
-            } else if ($filters['tagOperator'] === "or") {
-                $orWhere = "";
-                foreach ($filters['tags'] as $tag) {
-                    if ($i === 0) {
-                        $orWhere .= "tags = :tag" . $i;
-                    } else {
-                        $orWhere .= " OR tags = :tag" . $i;
-                    }
-                    $queryBuilder->setParameter("tag" . $i, $tag);
-                    $i++;
-                }
-                $queryBuilder->andWhere($orWhere);
-            }
-        }
+        $filters = [
+            'locale' => $locale,
+            'stage' => DimensionContentInterface::STAGE_LIVE,
+            'published' => true,
+        ];
+        return $this->countBy($filters);
     }
 
-    private function prepareCategoriesFilterX(QueryBuilder $queryBuilder, array $filters):void
+    public function countBy(array $filters = []): int
     {
-        if (!empty($filters['categories'])) {
+        $filters = $this->normalizeFindByFilters($filters);
+        $selects = $this->normalizeSelects([]);
+        $queryBuilder = $this->buildQueryBuilder($filters, [], $selects);
 
-            $queryBuilder->leftJoin('excerpt_translation.categories', 'categories');
+        $queryBuilder->select('COUNT(DISTINCT testimonial.id)');
 
-            $i = 0;
-            if ($filters['categoryOperator'] === "and") {
-                $andWhere = "";
-                foreach ($filters['categories'] as $category) {
-                    if ($i === 0) {
-                        $andWhere .= "categories = :category" . $i;
-                    } else {
-                        $andWhere .= " AND categories = :category" . $i;
-                    }
-                    $queryBuilder->setParameter("category" . $i, $category);
+        return (int) $queryBuilder->getQuery()->getSingleScalarResult();
+    }
+
+    private function buildQueryBuilder(
+        array $filters = [],
+        array $sortBys = [],
+        array $selects = []
+    ): QueryBuilder {
+        $queryBuilder = $this->createQueryBuilder('testimonial');
+
+        $this->applyContentJoin($queryBuilder, $filters, $sortBys, $selects);
+        $this->applyFilters($queryBuilder, $filters);
+        $this->applySortBys($queryBuilder, $sortBys);
+        $this->applyPagination($queryBuilder, $filters);
+
+        return $queryBuilder;
+    }
+
+    private function normalizeFindByFilters(array $filters): array
+    {
+        $filters['stage'] = $filters['stage'] ?? DimensionContentInterface::STAGE_DRAFT;
+        return $filters;
+    }
+
+    private function normalizeSelects(array $selects): array
+    {
+        $normalizedSelects = [];
+        foreach (self::SELECTS as $groupKey => $groupSelects) {
+            if (true === ($selects[$groupKey] ?? false)) {
+                foreach ($groupSelects as $selectKey => $selectValue) {
+                    $normalizedSelects[$selectKey] = $selectValue;
                 }
-                $queryBuilder->andWhere($andWhere);
-            } else if ($filters['categoryOperator'] === "or") {
-                $orWhere = "";
-                foreach ($filters['categories'] as $category) {
-                    if ($i === 0) {
-                        $orWhere .= "categories = :category" . $i;
-                    } else {
-                        $orWhere .= " OR categories = :category" . $i;
-                    }
-                    $queryBuilder->setParameter("category" . $i, $category);
-                }
-                $queryBuilder->andWhere($orWhere);
             }
         }
+        return $normalizedSelects;
     }
 
+    private function applyContentJoin(
+        QueryBuilder $queryBuilder,
+        array $filters,
+        array $sortBys,
+        array $selects
+    ): void {
+        $locale = $filters['locale'] ?? null;
+        $stage = $filters['stage'] ?? DimensionContentInterface::STAGE_DRAFT;
+        $version = $filters['version'] ?? DimensionContentInterface::CURRENT_VERSION;
+
+        $queryBuilder->leftJoin(
+            'testimonial.dimensionContents',
+            'dimensionContent',
+            'WITH',
+            'dimensionContent.stage = :stage AND dimensionContent.version = :version'
+            . ($locale ? ' AND dimensionContent.locale = :locale' : '')
+        );
+
+        $queryBuilder->setParameter('stage', $stage);
+        $queryBuilder->setParameter('version', $version);
+
+        if ($locale) {
+            $queryBuilder->setParameter('locale', $locale);
+        }
+
+        $queryBuilder->addSelect('dimensionContent');
+
+        if (!empty($selects)) {
+            $this->dimensionContentQueryEnhancer->addSelects(
+                $queryBuilder,
+                TestimonialDimensionContent::class,
+                ['locale' => $locale, 'stage' => $stage],
+                $selects
+            );
+        }
+    }
+
+    private function applyFilters(QueryBuilder $queryBuilder, array $filters): void
+    {
+        if (isset($filters['id'])) {
+            $queryBuilder->andWhere('testimonial.id = :id')
+                ->setParameter('id', $filters['id']);
+        }
+        if (isset($filters['ids'])) {
+            $queryBuilder->andWhere('testimonial.id IN (:ids)')
+                ->setParameter('ids', $filters['ids']);
+        }
+        if (isset($filters['published']) && $filters['published']) {
+            $queryBuilder->andWhere('dimensionContent.workflowPlace = :published')
+                ->setParameter('published', WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
+        }
+        // Add more filters (categories, tags) if QueryEnhancer doesn't handle them fully via selects?
+        // QueryEnhancer usually handles selects, but filters?
+        // SuluEventBundle handles filters explicitly (e.g. date ranges).
+        // For tags/categories, DimensionContentQueryEnhancer can help if we use correct join aliases?
+        // Usually, filter 'tags' comes from SmartContent.
+        // We should handle them if we want filtering by tags.
+    }
+
+    private function applySortBys(QueryBuilder $queryBuilder, array $sortBys): void
+    {
+        foreach ($sortBys as $field => $direction) {
+            switch ($field) {
+                case 'id':
+                    $queryBuilder->addOrderBy('testimonial.id', $direction);
+                    break;
+                case 'title':
+                case 'created':
+                case 'changed':
+                    $queryBuilder->addOrderBy('dimensionContent.' . $field, $direction);
+                    break;
+            }
+        }
+    }
+
+    private function applyPagination(QueryBuilder $queryBuilder, array $filters): void
+    {
+        if (isset($filters['limit'])) {
+            $queryBuilder->setMaxResults($filters['limit']);
+        }
+        if (isset($filters['offset'])) {
+            $queryBuilder->setFirstResult($filters['offset']);
+        }
+    }
 }

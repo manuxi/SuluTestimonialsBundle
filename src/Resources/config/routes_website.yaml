@@ -1,0 +1,5 @@
+app_testimonials_website:
+    resource: Manuxi\SuluTestimonialsBundle\Controller\Website\TestimonialsController
+    type: attribute
+    options:
+        expose: true

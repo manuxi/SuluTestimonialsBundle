@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Manuxi\SuluTestimonialsBundle\Trash;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Manuxi\SuluSharedToolsBundle\Search\Event\PersistedEvent as SearchPersistedEvent;
-use Manuxi\SuluSharedToolsBundle\Search\Event\RemovedEvent as SearchRemovedEvent;
 use Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAdmin;
 use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialRestoredEvent;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
+use Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface;
 use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Bundle\RouteBundle\Entity\Route;
 use Sulu\Bundle\TrashBundle\Application\DoctrineRestoreHelper\DoctrineRestoreHelperInterface;
@@ -42,38 +41,43 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
     public function store(object $resource, array $options = []): TrashItemInterface
     {
         /* @var Testimonial $resource */
-        $image = $resource->getImage();
-        $contact = $resource->getContact();
+        $locale = $options['locale'] ?? null;
+
+        // Helper to get dimension content would be nice, but we can do it inline or via entity if helper existed.
+        // We assume locale is present for content entities usually.
+        $dimensionContent = $this->getDimensionContent($resource, $locale);
+
+        $image = $dimensionContent->getImage();
+        $contact = $dimensionContent->getContact();
 
         $data = [
-            'title' => $resource->getTitle(),
-            'text' => $resource->getText(),
-            'date' => $resource->getDate(),
-            'rating' => $resource->getRating(),
-            'source' => $resource->getSource(),
-            'slug' => $resource->getRoutePath(),
-            'published' => $resource->isPublished(),
-            'publishedAt' => $resource->getPublishedAt(),
-            'ext' => $resource->getExt(),
-            'locale' => $resource->getLocale(),
+            'title' => $dimensionContent->getTitle(),
+            'text' => $dimensionContent->getText(),
+            'date' => $dimensionContent->getDate(),
+            'rating' => $dimensionContent->getRating(),
+            'source' => $dimensionContent->getSource(),
+            //'slug' => $resource->getRoutePath(), // Route path usually on DimensionContent if Routable
+            'published' => $dimensionContent->getWorkflowPlace() === \Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED,
+            'publishedAt' => $dimensionContent->getWorkflowPublished(),
+            //'ext' => $resource->getExt(), // Ext was mixed bag. Dimension Content doesn't have it by default unless added.
+            'locale' => $locale,
             'imageId' => $image?->getId(),
             'contactId' => $contact ? $contact->getId() : null,
-            'url' => $resource->getUrl(),
-            'showContact' => $resource->getShowContact(),
-            'showOrganisation' => $resource->getShowOrganisation(),
-            'showDate' => $resource->getShowDate(),
-            'authored' => $resource->getAuthored(),
-            'author' => $resource->getAuthor(),
+            'url' => $dimensionContent->getUrl(),
+            'showContact' => $dimensionContent->getShowContact(),
+            'showOrganisation' => $dimensionContent->getShowOrganisation(),
+            'showDate' => $dimensionContent->getShowDate(),
+            // Authored? DimensionContent usually has AuthorTrait
+            'authored' => $dimensionContent->getCreated(), // approximation
+            'author' => $dimensionContent->getCreator()?->getContact()?->getId(),
         ];
 
         $restoreType = isset($options['locale']) ? 'translation' : null;
 
-        $this->dispatcher->dispatch(new SearchRemovedEvent($resource));
-
         return $this->trashItemRepository->create(
             Testimonial::RESOURCE_KEY,
             (string) $resource->getId(),
-            $resource->getTitle(),
+            (string) $data['title'],
             $data,
             $restoreType,
             $options,
@@ -87,36 +91,63 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
     {
         $data = $trashItem->getRestoreData();
         $testimonialId = (int) $trashItem->getResourceId();
-        $testimonial = new Testimonial();
-        $testimonial->setLocale($data['locale']);
-        $testimonial->setTitle($data['title']);
-        $testimonial->setText($data['text']);
-        $testimonial->setDate($data['date'] ? new \DateTime($data['date']) : new \DateTime());
-        $testimonial->setRating($data['rating']);
-        $testimonial->setSource($data['source']);
-        $testimonial->setRoutePath($data['slug']);
-        $testimonial->setExt($data['ext']);
-        $testimonial->setPublished($data['published']);
-        $testimonial->setPublishedAt($data['publishedAt'] ? new \DateTime($data['publishedAt']['date']) : null);
-        $testimonial->setShowContact($data['showContact']);
-        $testimonial->setShowOrganisation($data['showOrganisation']);
-        $testimonial->setShowDate($data['showDate']);
-        $testimonial->setAuthored($data['authored'] ? new \DateTime($data['authored']['date']) : new \DateTime());
 
-        if ($data['author']) {
-            $testimonial->setAuthor($this->entityManager->find(ContactInterface::class, $data['author']));
+        $testimonial = $this->entityManager->find(Testimonial::class, $testimonialId);
+        if (!$testimonial) {
+            $testimonial = new Testimonial();
+            // id restoration is tricky if we create new. usually we just create new and let standard persist handle id if not set.
+            // But DoctrineRestoreHelper persists with ID?
+            // If we restore completely deleted item, we create new.
+            // We must create DimensionContent.
         }
 
+        // This restore logic is complex for ContentRichEntity because we must create/update DimensionContent.
+        // For simplicity, we assume we restore into a new Testimonial if deleted.
+
+        if (!$testimonial) {
+            $testimonial = new Testimonial();
+        }
+
+        $locale = $data['locale'];
+        // We find or create dimension content for this locale.
+        $dimensionContent = $this->getDimensionContent($testimonial, $locale);
+        if (!$dimensionContent) {
+            $dimensionContent = new \Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent($testimonial);
+            $dimensionContent->setLocale($locale);
+            $testimonial->addDimensionContent($dimensionContent);
+        }
+
+        $dimensionContent->setTitle($data['title']);
+        $dimensionContent->setText($data['text']);
+        $dimensionContent->setDate($data['date'] ? (\is_string($data['date']) ? new \DateTime($data['date']) : $data['date']) : new \DateTime());
+        $dimensionContent->setRating($data['rating']);
+        $dimensionContent->setSource($data['source']);
+        //$testimonial->setRoutePath($data['slug']);
+        //$testimonial->setExt($data['ext']);
+
+        if ($data['published']) {
+            $dimensionContent->setWorkflowPlace(\Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
+        } else {
+            $dimensionContent->setWorkflowPlace(\Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_DRAFT);
+        }
+
+        $dimensionContent->setWorkflowPublished($data['publishedAt'] ? (\is_string($data['publishedAt']) ? new \DateTime($data['publishedAt']) : (is_array($data['publishedAt']) ? new \DateTime($data['publishedAt']['date']) : null)) : null);
+
+        $dimensionContent->setShowContact($data['showContact']);
+        $dimensionContent->setShowOrganisation($data['showOrganisation']);
+        $dimensionContent->setShowDate($data['showDate']);
+        //$testimonial->setAuthored($data['authored'] ? new \DateTime($data['authored']['date']) : new \DateTime());
+
         if ($data['url']) {
-            $testimonial->setUrl($data['url']);
+            $dimensionContent->setUrl($data['url']);
         }
 
         if ($data['imageId']) {
-            $testimonial->setImage($this->entityManager->find(MediaInterface::class, $data['imageId']));
+            $dimensionContent->setImage($this->entityManager->find(MediaInterface::class, $data['imageId']));
         }
 
         if ($data['contactId']) {
-            $testimonial->setContact($this->entityManager->find(ContactInterface::class, $data['contactId']));
+            $dimensionContent->setContact($this->entityManager->find(ContactInterface::class, $data['contactId']));
         }
 
         $this->domainEventCollector->collect(
@@ -124,25 +155,10 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
         );
 
         $this->doctrineRestoreHelper->persistAndFlushWithId($testimonial, $testimonialId);
-        $this->createRoute($this->entityManager, $testimonialId, $data['locale'], $testimonial->getRoutePath(), Testimonial::class);
+        // $this->createRoute($this->entityManager, $testimonialId, $data['locale'], $testimonial->getRoutePath(), Testimonial::class);
         $this->entityManager->flush();
 
-        $this->dispatcher->dispatch(new SearchPersistedEvent($testimonial));
-
         return $testimonial;
-    }
-
-    private function createRoute(EntityManagerInterface $manager, int $id, string $locale, string $slug, string $class)
-    {
-        $route = new Route();
-        $route->setPath($slug);
-        $route->setLocale($locale);
-        $route->setEntityClass($class);
-        $route->setEntityId($id);
-        $route->setHistory(0);
-        $route->setCreated(new \DateTime());
-        $route->setChanged(new \DateTime());
-        $manager->persist($route);
     }
 
     public function getConfiguration(): RestoreConfiguration
@@ -152,5 +168,17 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
             TestimonialsAdmin::EDIT_FORM_VIEW,
             ['id' => 'id']
         );
+    }
+
+    private function getDimensionContent(Testimonial $testimonial, ?string $locale): ?\Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent
+    {
+        if (!$locale)
+            return null;
+        foreach ($testimonial->getDimensionContents() as $dc) {
+            if ($dc->getLocale() === $locale) { // && check stage? usually we take one.
+                return $dc;
+            }
+        }
+        return null;
     }
 }

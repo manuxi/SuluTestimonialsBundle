@@ -1,0 +1,45 @@
+services:
+    Manuxi\SuluTestimonialsBundle\Controller\Admin\TestimonialsController:
+        public: true
+        class: Manuxi\SuluTestimonialsBundle\Controller\Admin\TestimonialsController
+        arguments:
+            - '@fos_rest.view_handler.default'
+            - '@security.token_storage'
+            - '@sulu_core.list_builder.field_descriptor_factory'
+            - '@sulu_core.doctrine_list_builder_factory'
+            - '@sulu_core.rest_helper'
+            - '@sulu_content.content_manager'
+            - '@doctrine.orm.entity_manager'
+            - '@sulu_testimonials.doctrine_list_representation_factory'
+            - '@sulu_activity.domain_event_collector'
+            - '@sulu_trash.trash_manager'
+            - '@sulu_content.content_workflow'
+        tags:
+            - { name: controller.service_arguments }
+            - { name: sulu.context, context: admin }
+
+    Manuxi\SuluTestimonialsBundle\Controller\Admin\SettingsController:
+        public: true
+        class: Manuxi\SuluTestimonialsBundle\Controller\Admin\SettingsController
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+            - '@fos_rest.view_handler.default'
+            - '@sulu_activity.domain_event_collector'
+            - '@security.token_storage'
+        tags:
+            - { name: controller.service_arguments }
+            - { name: sulu.context, context: admin }
+
+    Manuxi\SuluTestimonialsBundle\Controller\Website\TestimonialsController:
+        public: true
+        class: Manuxi\SuluTestimonialsBundle\Controller\Website\TestimonialsController
+        arguments:
+            - '@twig'
+            - '@sulu_website.resolver.template_attribute'
+            - '@sulu_route.route_repository'
+            - '@sulu_core.webspace.webspace_manager'
+            - '@request_stack'
+            - '@sulu_content.content_aggregator'
+        tags:
+            - { name: controller.service_arguments }
+            - { name: sulu.context, context: website }
