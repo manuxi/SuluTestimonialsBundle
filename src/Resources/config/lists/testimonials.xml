@@ -112,6 +112,7 @@
             <transformer type="title"/>
         </case-property>
 
+        <!-- Fixed: Added glue attribute for proper name display -->
         <concatenation-property name="contact" translation="sulu_testimonials.contact" visibility="yes"
                                 searchability="yes" glue=" ">
             <field>
@@ -125,6 +126,12 @@
                 <joins ref="testimonialContact"/>
             </field>
         </concatenation-property>
+
+        <property name="rating" translation="sulu_testimonials.rating" visibility="yes" sortable="true">
+            <field-name>rating</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
+        </property>
 
         <property name="publishedState" type="string" visibility="never">
             <field-name>workflowPlace</field-name>
