@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Manuxi\SuluTestimonialsBundle\Admin;
 
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
-use Manuxi\SuluTestimonialsBundle\Entity\TestimonialsSettings;
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItem;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
-use Sulu\Bundle\AdminBundle\Admin\View\DropdownToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\ToolbarAction;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewBuilderFactoryInterface;
 use Sulu\Bundle\AdminBundle\Admin\View\ViewCollection;
@@ -21,14 +19,13 @@ use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactoryInterface;
 class TestimonialsAdmin extends Admin
 {
     public const NAV_ITEM = 'sulu_testimonials.testimonials';
-
     public const LIST_VIEW = 'sulu_testimonials.testimonials.list';
-    public const ADD_TABS_VIEW = 'sulu_testimonials.testimonials.add_tabs';
-    public const EDIT_TABS_VIEW = 'sulu_testimonials.testimonials.edit_tabs';
-    public const EDIT_FORM_DETAILS_VIEW = 'sulu_testimonials.testimonials.edit_form.details';
-
-    // Backward compatibility
-    public const EDIT_FORM_VIEW = self::EDIT_TABS_VIEW;
+    public const ADD_TABS_VIEW = 'sulu_testimonials.testimonial.add_tabs';
+    public const ADD_FORM_VIEW = 'sulu_testimonials.testimonial.add_form';
+    public const ADD_FORM_DETAILS_VIEW = 'sulu_testimonials.testimonial.add_form.details';
+    public const EDIT_TABS_VIEW = 'sulu_testimonials.testimonial.edit_tabs';
+    public const EDIT_FORM_VIEW = 'sulu_testimonials.testimonial.edit_form';
+    public const EDIT_FORM_DETAILS_VIEW = 'sulu_testimonials.testimonial.edit_form.details';
 
     public function __construct(
         private readonly ViewBuilderFactoryInterface $viewBuilderFactory,
@@ -76,33 +73,24 @@ class TestimonialsAdmin extends Admin
             $listToolbarActions[] = new ToolbarAction('sulu_admin.export');
         }
 
-        if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::LIVE)) {
-            $editDropdownToolbarActions = [
-                new ToolbarAction('sulu_admin.save'),
-                new ToolbarAction('sulu_admin.publish'),
-                new ToolbarAction('sulu_admin.set_unpublished'),
-            ];
-
-            if (\count($locales) > 1) {
-                $editDropdownToolbarActions[] = new ToolbarAction('sulu_admin.copy_locale');
-            }
-
-            $formToolbarActions[] = new DropdownToolbarAction(
-                'sulu_admin.edit',
-                'su-cog',
-                $editDropdownToolbarActions
-            );
-        } elseif ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
+        if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
             $formToolbarActions[] = new ToolbarAction('sulu_admin.save');
         }
 
-        if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
+        if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::LIVE)) {
+            $formToolbarActions[] = new ToolbarAction('sulu_admin.publish');
+        }
+
+        if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
+            $formToolbarActions[] = new ToolbarAction('sulu_admin.delete');
+        }
+
+        if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::VIEW)) {
             // List View
             $viewCollection->add(
                 $this->viewBuilderFactory->createListViewBuilder(static::LIST_VIEW, '/testimonials/:locale')
                     ->setResourceKey($resourceKey)
-                    ->setListKey(Testimonial::LIST_KEY)
-                    ->setTitle('sulu_testimonials.testimonials')
+                    ->setListKey('testimonials')
                     ->addListAdapters(['table'])
                     ->addLocales($locales)
                     ->setDefaultLocale($locales[0])
@@ -143,18 +131,6 @@ class TestimonialsAdmin extends Admin
                 }
                 $viewCollection->add($viewBuilder);
             }
-
-            // Settings Tab
-            $viewCollection->add(
-                $this->viewBuilderFactory
-                    ->createFormViewBuilder(static::EDIT_TABS_VIEW . '.settings', '/settings')
-                    ->setResourceKey(TestimonialsSettings::RESOURCE_KEY)
-                    ->setFormKey(TestimonialsSettings::FORM_KEY)
-                    ->setTabTitle('sulu_page.settings')
-                    ->setTabOrder(1024)
-                    ->addToolbarActions($formToolbarActions)
-                    ->setParent(static::EDIT_TABS_VIEW)
-            );
         }
     }
 

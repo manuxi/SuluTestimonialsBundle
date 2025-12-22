@@ -102,25 +102,6 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
             );
         }
 
-        /*        if ($container->hasExtension('sulu_route')) {
-                    $container->prependExtensionConfig(
-                        'sulu_route',
-                        [
-                            'mappings' => [
-                                Testimonial::class => [
-                                    'generator' => 'schema',
-                                    'options' => [
-                                        // @TODO: works not yet as expected, does not translate correctly
-                                        // see https://github.com/sulu/sulu/pull/5920
-                                        'route_schema' => '/{translator.trans("sulu_testimonials.testimonials")}/{implode("-", object)}',
-                                    ],
-                                    'resource_key' => Testimonial::RESOURCE_KEY,
-                                ],
-                            ],
-                        ]
-                    );
-                }*/
-
         if ($container->hasExtension('sulu_admin')) {
             $container->prependExtensionConfig(
                 'sulu_admin',

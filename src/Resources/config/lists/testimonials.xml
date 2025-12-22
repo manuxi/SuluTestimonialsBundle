@@ -113,7 +113,7 @@
         </case-property>
 
         <concatenation-property name="contact" translation="sulu_testimonials.contact" visibility="yes"
-                                searchability="yes">
+                                searchability="yes" glue=" ">
             <field>
                 <field-name>firstName</field-name>
                 <entity-name>testimonialContact</entity-name>
@@ -150,7 +150,7 @@
             <joins ref="dimensionContent"/>
         </property>
 
-        <concatenation-property name="creator" translation="sulu_admin.creator" visibility="yes" searchability="yes">
+        <concatenation-property name="creator" translation="sulu_admin.creator" visibility="yes" searchability="yes" glue=" ">
             <field>
                 <field-name>firstName</field-name>
                 <entity-name>creatorContact</entity-name>
@@ -169,7 +169,7 @@
             <joins ref="dimensionContent"/>
         </property>
 
-        <concatenation-property name="changer" translation="sulu_admin.changer" visibility="no" searchability="yes">
+        <concatenation-property name="changer" translation="sulu_admin.changer" visibility="no" searchability="yes" glue=" ">
             <field>
                 <field-name>firstName</field-name>
                 <entity-name>changerContact</entity-name>

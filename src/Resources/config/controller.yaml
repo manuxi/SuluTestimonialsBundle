@@ -23,8 +23,8 @@ services:
         class: Manuxi\SuluTestimonialsBundle\Controller\Admin\SettingsController
         arguments:
             - '@doctrine.orm.default_entity_manager'
-            - '@fos_rest.view_handler.default'
             - '@sulu_activity.domain_event_collector'
+            - '@fos_rest.view_handler.default'
             - '@security.token_storage'
         tags:
             - { name: controller.service_arguments }

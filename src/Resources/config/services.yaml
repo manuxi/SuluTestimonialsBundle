@@ -85,6 +85,13 @@ services:
         tags:
             - { name: sulu_content.data_mapper }
 
+    Manuxi\SuluTestimonialsBundle\Content\DataMapper\AutoAuthorDataMapper:
+        class: Manuxi\SuluTestimonialsBundle\Content\DataMapper\AutoAuthorDataMapper
+        arguments:
+            - '@security.helper'
+        tags:
+            - { name: sulu_content.data_mapper, priority: -50 }
+
     # Normalizer
     Manuxi\SuluTestimonialsBundle\Content\Normalizer\TestimonialNormalizer:
         class: Manuxi\SuluTestimonialsBundle\Content\Normalizer\TestimonialNormalizer

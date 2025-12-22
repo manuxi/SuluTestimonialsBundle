@@ -5,7 +5,6 @@ namespace Manuxi\SuluTestimonialsBundle\Entity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-
 use Sulu\Component\Persistence\Model\AuditableInterface;
 use Sulu\Component\Persistence\Model\AuditableTrait;
 
@@ -15,8 +14,8 @@ class TestimonialsSettings implements AuditableInterface
 {
     use AuditableTrait;
 
-    public const RESOURCE_KEY = 'testimonials-settings';
-    public const FORM_KEY = 'testimonial_settings';
+    public const RESOURCE_KEY = 'testimonials_settings';
+    public const FORM_KEY = 'testimonials_config';
     public const SECURITY_CONTEXT = 'sulu.testimonials.settings';
 
     #[ORM\Id]
@@ -80,5 +79,4 @@ class TestimonialsSettings implements AuditableInterface
     {
         $this->pageTestimonials = $pageTestimonials;
     }
-
 }

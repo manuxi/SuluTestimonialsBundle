@@ -13,31 +13,25 @@ use Sulu\Component\Rest\AbstractRestController;
 use Sulu\Component\Security\SecuredControllerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-
 
 #[Route('/admin/api')]
 class SettingsController extends AbstractRestController implements SecuredControllerInterface
 {
-    private EntityManagerInterface $entityManager;
-    private DomainEventCollectorInterface $domainEventCollector;
-
     public function __construct(
-        EntityManagerInterface $entityManager,
+        private EntityManagerInterface $entityManager,
+        private DomainEventCollectorInterface $domainEventCollector,
         ViewHandlerInterface $viewHandler,
-        DomainEventCollectorInterface $domainEventCollector,
-        ?TokenStorageInterface $tokenStorage = null
+        ?TokenStorageInterface $tokenStorage = null,
     ) {
-        $this->entityManager = $entityManager;
-        $this->domainEventCollector = $domainEventCollector;
-
         parent::__construct($viewHandler, $tokenStorage);
     }
 
     #[Route(
-        path: '/testimonials-settings.{_format}',
+        path: '/testimonials-settings/{id}.{_format}',
         name: 'sulu_testimonials.get_testimonials-settings',
+        requirements: ['_format' => 'json'],
         options: ['expose' => true],
         defaults: ['_format' => 'json'],
         methods: ['GET']
@@ -50,8 +44,9 @@ class SettingsController extends AbstractRestController implements SecuredContro
     }
 
     #[Route(
-        path: '/testimonials-settings.{_format}',
+        path: '/testimonials-settings/{id}.{_format}',
         name: 'sulu_testimonials.put_testimonials-settings',
+        requirements: ['_format' => 'json'],
         options: ['expose' => true],
         defaults: ['_format' => 'json'],
         methods: ['PUT']
@@ -87,10 +82,10 @@ class SettingsController extends AbstractRestController implements SecuredContro
 
     protected function mapDataToEntity(array $data, TestimonialsSettings $entity): void
     {
-        $entity->setToggleHeader($data['toggleHeader']);
-        $entity->setToggleHero($data['toggleHero']);
-        $entity->setToggleBreadcrumbs($data['toggleBreadcrumbs']);
-        $entity->setPageTestimonials($data['pageTestimonials']);
+        $entity->setToggleHeader($data['toggleHeader'] ?? null);
+        $entity->setToggleHero($data['toggleHero'] ?? null);
+        $entity->setToggleBreadcrumbs($data['toggleBreadcrumbs'] ?? null);
+        $entity->setPageTestimonials($data['pageTestimonials'] ?? null);
     }
 
     public function getSecurityContext(): string

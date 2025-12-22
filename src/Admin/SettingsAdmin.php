@@ -20,15 +20,10 @@ class SettingsAdmin extends Admin
     public const FORM_VIEW = 'sulu_testimonials.config.form';
     public const NAV_ITEM = 'sulu_testimonials.config.title.navi';
 
-    private ViewBuilderFactoryInterface $viewBuilderFactory;
-    private SecurityCheckerInterface $securityChecker;
-
     public function __construct(
-        ViewBuilderFactoryInterface $viewBuilderFactory,
-        SecurityCheckerInterface $securityChecker
+        private ViewBuilderFactoryInterface $viewBuilderFactory,
+        private SecurityCheckerInterface $securityChecker,
     ) {
-        $this->viewBuilderFactory = $viewBuilderFactory;
-        $this->securityChecker = $securityChecker;
     }
 
     public function configureNavigationItems(NavigationItemCollection $navigationItemCollection): void
@@ -47,16 +42,15 @@ class SettingsAdmin extends Admin
     {
         if ($this->securityChecker->hasPermission(TestimonialsSettings::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
             $viewCollection->add(
-            // sulu will only load the existing entity if the path of the form includes an id attribute
                 $this->viewBuilderFactory->createResourceTabViewBuilder(static::TAB_VIEW, '/testimonials-settings/:id')
                     ->setResourceKey(TestimonialsSettings::RESOURCE_KEY)
                     ->setAttributeDefault('id', '-')
             );
 
             $viewCollection->add(
-                $this->viewBuilderFactory->createFormViewBuilder(static::FORM_VIEW, '/config')
+                $this->viewBuilderFactory->createFormViewBuilder(static::FORM_VIEW, '/details')
                     ->setResourceKey(TestimonialsSettings::RESOURCE_KEY)
-                    ->setFormKey(TestimonialsSettings::FORM_KEY)
+                    ->setFormKey('testimonials_config')
                     ->setTabTitle('sulu_testimonials.config.tab')
                     ->addToolbarActions([new ToolbarAction('sulu_admin.save')])
                     ->setParent(static::TAB_VIEW)
@@ -64,9 +58,6 @@ class SettingsAdmin extends Admin
         }
     }
 
-    /**
-     * @return mixed[]
-     */
     public function getSecurityContexts(): array
     {
         return [
