@@ -135,8 +135,8 @@ class TestimonialsSitemapProvider implements SitemapProviderInterface
         $queryBuilder->setParameter('hide', false);
 
         $queryBuilder->andWhere('dimensionContent.id IS NOT NULL');
-        $queryBuilder->andWhere('workflowPlace = :published'); // Testimonial logic usually requires published
-        $queryBuilder->setParameter('published', \Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
+        $queryBuilder->andWhere('workflowPlace = :published');
+        $queryBuilder->setParameter('published', \Sulu\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
         // Wait, the JOIN condition handled stage=live, but workflowPlace check is also good for explicit state.
         // Actually STAGE_LIVE implies it's the live content.
         // But let's check EventSitemapProvider again... it uses STAGE_LIVE AND checks for dimensionContent.id.

@@ -14,7 +14,8 @@ class TestimonialsRouteDefaultsProvider implements RouteDefaultsProviderInterfac
 
     private TestimonialRepository $repository;
 
-    public function __construct(TestimonialRepository $repository) {
+    public function __construct(TestimonialRepository $repository)
+    {
         $this->repository = $repository;
     }
 
@@ -29,17 +30,24 @@ class TestimonialsRouteDefaultsProvider implements RouteDefaultsProviderInterfac
     {
         return [
             '_controller' => TestimonialsController::class . '::indexAction',
-            'testimonial' => $this->repository->findById((int)$id, $locale),
+            'testimonial' => $this->repository->findById((int) $id),
         ];
     }
 
     public function isPublished($entityClass, $id, $locale): bool
     {
-        $testimonial = $this->repository->findById((int)$id, $locale);
+        $testimonial = $this->repository->findById((int) $id);
         if (!$this->supports($entityClass) || !$testimonial instanceof Testimonial) {
             return false;
         }
-        return $testimonial->isPublished();
+
+        foreach ($testimonial->getDimensionContents() as $dimensionContent) {
+            if ($dimensionContent->getLocale() === $locale && $dimensionContent->getStage() === \Sulu\Content\Domain\Model\DimensionContentInterface::STAGE_LIVE) {
+                return $dimensionContent->getWorkflowPlace() === \Sulu\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED;
+            }
+        }
+
+        return false;
     }
 
     public function supports($entityClass)

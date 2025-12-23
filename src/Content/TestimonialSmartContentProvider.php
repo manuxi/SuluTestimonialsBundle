@@ -56,9 +56,7 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
             ->enableLimit()
             ->enablePagination()
             ->enablePresentAs()
-            // Testimonials usually don't have categories/tags in strict sense unless excerpt/traits enabled.
-            // DimensionContent has ExcerptTrait, so we can enable tags/categories if we want.
-            // ->enableTags() 
+            // ->enableTags()
             // ->enableCategories()
             ->enableSorting($this->getSorting())
             ->enableView(TestimonialsAdmin::EDIT_FORM_VIEW, ['id' => 'id']);

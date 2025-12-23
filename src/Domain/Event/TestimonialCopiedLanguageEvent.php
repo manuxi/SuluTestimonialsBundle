@@ -8,6 +8,6 @@ class TestimonialCopiedLanguageEvent extends AbstractTestimonialEvent
 {
     public function getEventType(): string
     {
-        return 'published';
+        return 'translation_copied';
     }
 }

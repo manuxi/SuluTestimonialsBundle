@@ -60,7 +60,7 @@ class TestimonialsObjectProvider implements PreviewDefaultsProviderInterface
                 $dimensionContent->setText($data['text']);
             }
             if (isset($data['rating'])) {
-                $dimensionContent->setRating($data['rating']);
+                $dimensionContent->setRating((string)$data['rating']);
             }
             if (isset($data['source'])) {
                 $dimensionContent->setSource($data['source']);

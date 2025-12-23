@@ -10,7 +10,7 @@ use Manuxi\SuluTestimonialsBundle\Domain\Event\TestimonialRestoredEvent;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Sulu\Bundle\ActivityBundle\Application\Collector\DomainEventCollectorInterface;
 use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
-use Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface;
+use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Bundle\RouteBundle\Entity\Route;
 use Sulu\Bundle\TrashBundle\Application\DoctrineRestoreHelper\DoctrineRestoreHelperInterface;
@@ -57,13 +57,13 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
             'rating' => $dimensionContent->getRating(),
             'source' => $dimensionContent->getSource(),
             //'slug' => $resource->getRoutePath(), // Route path usually on DimensionContent if Routable
-            'published' => $dimensionContent->getWorkflowPlace() === \Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED,
+            'published' => $dimensionContent->getWorkflowPlace() === WorkflowInterface::WORKFLOW_PLACE_PUBLISHED,
             'publishedAt' => $dimensionContent->getWorkflowPublished(),
             //'ext' => $resource->getExt(), // Ext was mixed bag. Dimension Content doesn't have it by default unless added.
             'locale' => $locale,
             'imageId' => $image?->getId(),
             'contactId' => $contact ? $contact->getId() : null,
-            'url' => $dimensionContent->getUrl(),
+            'url' => $dimensionContent->getWebsite(),
             'showContact' => $dimensionContent->getShowContact(),
             'showOrganisation' => $dimensionContent->getShowOrganisation(),
             'showDate' => $dimensionContent->getShowDate(),
@@ -126,9 +126,9 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
         //$testimonial->setExt($data['ext']);
 
         if ($data['published']) {
-            $dimensionContent->setWorkflowPlace(\Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
+            $dimensionContent->setWorkflowPlace(WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
         } else {
-            $dimensionContent->setWorkflowPlace(\Sulu\Bundle\ContentBundle\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_DRAFT);
+            $dimensionContent->setWorkflowPlace(WorkflowInterface::WORKFLOW_PLACE_DRAFT);
         }
 
         $dimensionContent->setWorkflowPublished($data['publishedAt'] ? (\is_string($data['publishedAt']) ? new \DateTime($data['publishedAt']) : (is_array($data['publishedAt']) ? new \DateTime($data['publishedAt']['date']) : null)) : null);
@@ -139,7 +139,7 @@ class TestimonialsTrashItemHandler implements StoreTrashItemHandlerInterface, Re
         //$testimonial->setAuthored($data['authored'] ? new \DateTime($data['authored']['date']) : new \DateTime());
 
         if ($data['url']) {
-            $dimensionContent->setUrl($data['url']);
+            $dimensionContent->setWebsite($data['url']);
         }
 
         if ($data['imageId']) {

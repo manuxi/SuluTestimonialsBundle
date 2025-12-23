@@ -35,6 +35,12 @@ class TestimonialsSettings implements AuditableInterface
     #[ORM\Column(type: Types::STRING, nullable: true)]
     private ?string $pageTestimonials = null;
 
+    public function __construct()
+    {
+        $this->created = new \DateTimeImmutable();
+        $this->changed = new \DateTimeImmutable();
+    }
+
     public function getId(): ?int
     {
         return $this->id;

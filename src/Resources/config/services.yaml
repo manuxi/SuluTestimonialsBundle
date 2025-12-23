@@ -53,20 +53,6 @@ services:
         tags:
             - { name: doctrine.repository_service }
 
-    sulu_testimonials.single_testimonial_selection:
-        class: Manuxi\SuluTestimonialsBundle\Content\Type\SingleTestimonialSelectionPropertyResolver
-        arguments:
-            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository'
-        tags:
-            - { name: sulu_content.property_resolver, type: single_testimonial_selection }
-
-    sulu_testimonials.testimonials_selection:
-        class: Manuxi\SuluTestimonialsBundle\Content\Type\TestimonialsSelectionPropertyResolver
-        arguments:
-            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository'
-        tags:
-            - { name: sulu_content.property_resolver, type: testimonials_selection }
-
     sulu_testimonials.testimonials_data_provider:
         class: Manuxi\SuluTestimonialsBundle\Content\TestimonialSmartContentProvider
         arguments:
@@ -97,6 +83,25 @@ services:
         class: Manuxi\SuluTestimonialsBundle\Content\Normalizer\TestimonialNormalizer
         tags:
             - { name: sulu_content.normalizer }
+
+    # Property Resolvers
+    sulu_testimonials.property_resolver.single_testimonial_selection:
+        class: Manuxi\SuluTestimonialsBundle\Content\PropertyResolver\SingleTestimonialSelectionPropertyResolver
+        tags:
+            - { name: sulu_content.property_resolver }
+
+    sulu_testimonials.property_resolver.event_selection:
+        class: Manuxi\SuluTestimonialsBundle\Content\PropertyResolver\TestimonialSelectionPropertyResolver
+        tags:
+            - { name: sulu_content.property_resolver }
+
+    # Resource Loader
+    sulu_testimonials.resource_loader.event:
+        class: Manuxi\SuluTestimonialsBundle\Content\ResourceLoader\TestimonialResourceLoader
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+        tags:
+            - { name: sulu_content.resource_loader }
 
     # MODELS
     sulu_testimonials.object_provider:

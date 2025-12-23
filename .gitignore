@@ -4,3 +4,4 @@ composer.lock
 /phpunit.xml
 .phpunit.result.cache
 /var/
+/tests/App/var/

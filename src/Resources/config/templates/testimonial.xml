@@ -3,7 +3,9 @@
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://schemas.sulu.io/template/template http://schemas.sulu.io/template/template-1.0.xsd">
     <key>testimonial</key>
-
+    <meta>
+        <title>sulu_testimonials.template.basic</title>
+    </meta>
 
     <properties>
         <section name="mandatory">

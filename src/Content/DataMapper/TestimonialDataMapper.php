@@ -51,8 +51,8 @@ class TestimonialDataMapper implements DataMapperInterface
             $localizedContent->setText($data['text']);
         }
         if (array_key_exists('rating', $data)) {
-            $unlocalizedContent->setRating($data['rating']);
-            $localizedContent->setRating($data['rating']);
+            $unlocalizedContent->setRating((string)$data['rating']);
+            $localizedContent->setRating((string)$data['rating']);
         }
         if (array_key_exists('source', $data)) {
             $unlocalizedContent->setSource($data['source']);
