@@ -83,7 +83,7 @@ class TestimonialsController extends AbstractRestController
     public function getAction(Request $request, int $id): Response
     {
         /** @var Testimonial|null $testimonial */
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findOneBy(['id' => $id]);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();
@@ -142,7 +142,7 @@ class TestimonialsController extends AbstractRestController
     public function postTriggerAction(int $id, Request $request): Response
     {
         /** @var Testimonial|null $testimonial */
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findOneBy(['id' => $id]);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();
@@ -235,7 +235,7 @@ class TestimonialsController extends AbstractRestController
     public function putAction(Request $request, int $id): Response
     {
         /** @var Testimonial|null $testimonial */
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findOneBy(['id' => $id]);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();
@@ -283,7 +283,7 @@ class TestimonialsController extends AbstractRestController
     public function deleteAction(Request $request, int $id): Response
     {
         /** @var Testimonial $testimonial */
-        $testimonial = $this->entityManager->find(Testimonial::class, $id);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();

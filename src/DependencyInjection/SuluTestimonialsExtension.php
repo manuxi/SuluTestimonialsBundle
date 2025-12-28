@@ -10,9 +10,9 @@ use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use Symfony\Component\Yaml\Yaml;
 
 class SuluTestimonialsExtension extends Extension implements PrependExtensionInterface
 {
@@ -21,10 +21,16 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
     /**
      * @throws \Exception
      */
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
+
+        // Set rating parameters
+        $container->setParameter('sulu_testimonials.rating.max_value', $config['rating']['max_value']);
+        $container->setParameter('sulu_testimonials.rating.default_value', $config['rating']['default_value']);
+        $container->setParameter('sulu_testimonials.rating.use_star_symbols', $config['rating']['use_star_symbols']);
+        $container->setParameter('sulu_testimonials.rating.use_star_widget', $config['rating']['use_star_widget']);
 
         $yamlLoader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $yamlLoader->load('services.yaml');
@@ -33,8 +39,32 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
         $this->configurePersistence($config['objects'], $container);
     }
 
-    public function prepend(ContainerBuilder $container)
+    public function prepend(ContainerBuilder $container): void
     {
+        // Load bundle default configuration if project hasn't defined rating config
+        if ($container->hasExtension('sulu_testimonials')) {
+            $configs = $container->getExtensionConfig('sulu_testimonials');
+
+            $hasProjectConfig = false;
+            foreach ($configs as $config) {
+                if (isset($config['rating'])) {
+                    $hasProjectConfig = true;
+                    break;
+                }
+            }
+
+            if (!$hasProjectConfig) {
+                $defaultConfigFile = __DIR__ . '/../Resources/config/packages/sulu_testimonials.yaml';
+                if (file_exists($defaultConfigFile)) {
+                    $defaultConfig = Yaml::parseFile($defaultConfigFile);
+
+                    if (isset($defaultConfig['sulu_testimonials'])) {
+                        $container->prependExtensionConfig('sulu_testimonials', $defaultConfig['sulu_testimonials']);
+                    }
+                }
+            }
+        }
+
         if ($container->hasExtension('sulu_search')) {
             $container->prependExtensionConfig(
                 'sulu_search',

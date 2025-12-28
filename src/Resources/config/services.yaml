@@ -138,11 +138,16 @@ services:
         tags:
             - { name: sulu_website.reference_store, key: testimonials }
 
-    sulu_testimonials.rating_selection:
-        class: Manuxi\SuluTestimonialsBundle\Service\TestimonialRatingSelect
-        public: true
+    Manuxi\SuluTestimonialsBundle\Service\TestimonialRatingSelect:
         arguments:
-            - '@translator.default'
+            $translator: '@translator.default'
+            $maxValue: '%sulu_testimonials.rating.max_value%'
+            $defaultValue: '%sulu_testimonials.rating.default_value%'
+        public: true
+
+    sulu_testimonials.rating_selection:
+        alias: Manuxi\SuluTestimonialsBundle\Service\TestimonialRatingSelect
+        public: true
 
     # Link
     sulu_testimonials.testimonial_link_provider:

@@ -1,7 +1,6 @@
 <?xml version="1.0" ?>
 <list xmlns="http://schemas.sulu.io/list-builder/list">
-    <key>testimonials</key>
-
+    <key>testimonials_list</key>
     <joins name="dimensionContent">
         <join>
             <entity-name>dimensionContent</entity-name>
@@ -12,7 +11,6 @@
             </condition>
         </join>
     </joins>
-
     <joins name="liveDimensionContent">
         <join>
             <entity-name>liveDimensionContent</entity-name>
@@ -21,7 +19,6 @@
             <condition>liveDimensionContent.locale = :locale AND liveDimensionContent.stage = 'live'</condition>
         </join>
     </joins>
-
     <joins name="ghostDimensionContent">
         <join>
             <entity-name>ghostDimensionContent</entity-name>
@@ -32,7 +29,6 @@
             </condition>
         </join>
     </joins>
-
     <joins name="testimonialContact" ref="dimensionContent">
         <join>
             <entity-name>testimonialContact</entity-name>
@@ -40,42 +36,36 @@
             <method>LEFT</method>
         </join>
     </joins>
-
     <joins name="creatorUser" ref="dimensionContent">
         <join>
             <entity-name>creatorUser</entity-name>
             <field-name>dimensionContent.creator</field-name>
         </join>
     </joins>
-
     <joins name="creatorContact" ref="creatorUser">
         <join>
             <entity-name>creatorContact</entity-name>
             <field-name>creatorUser.contact</field-name>
         </join>
     </joins>
-
     <joins name="changerUser" ref="dimensionContent">
         <join>
             <entity-name>changerUser</entity-name>
             <field-name>dimensionContent.changer</field-name>
         </join>
     </joins>
-
     <joins name="changerContact" ref="changerUser">
         <join>
             <entity-name>changerContact</entity-name>
             <field-name>changerUser.contact</field-name>
         </join>
     </joins>
-
     <joins name="authorContact" ref="dimensionContent">
         <join>
             <entity-name>authorContact</entity-name>
             <field-name>dimensionContent.author</field-name>
         </join>
     </joins>
-
     <joins name="image" ref="dimensionContent">
         <join>
             <entity-name>Sulu\Bundle\MediaBundle\Entity\Media</entity-name>
@@ -83,21 +73,17 @@
             <method>LEFT</method>
         </join>
     </joins>
-
     <properties>
-
         <property name="id" visibility="no" translation="sulu_admin.id">
             <field-name>id</field-name>
             <entity-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial</entity-name>
         </property>
-
         <property name="image" visibility="always" translation="sulu_testimonials.image" sortable="false">
             <field-name>id</field-name>
             <entity-name>Sulu\Bundle\MediaBundle\Entity\Media</entity-name>
             <joins ref="image"/>
             <transformer type="thumbnails"/>
         </property>
-
         <case-property name="title" translation="sulu_admin.title" visibility="always" searchability="yes">
             <field>
                 <field-name>title</field-name>
@@ -112,9 +98,8 @@
             <transformer type="title"/>
         </case-property>
 
-        <!-- Fixed: Added glue attribute for proper name display -->
         <concatenation-property name="contact" translation="sulu_testimonials.contact" visibility="yes"
-                                searchability="yes" glue=" ">
+                                searchability="yes">
             <field>
                 <field-name>firstName</field-name>
                 <entity-name>testimonialContact</entity-name>
@@ -126,24 +111,29 @@
                 <joins ref="testimonialContact"/>
             </field>
         </concatenation-property>
-
         <property name="rating" translation="sulu_testimonials.rating" visibility="yes" sortable="true">
             <field-name>rating</field-name>
             <entity-name>dimensionContent</entity-name>
             <joins ref="dimensionContent"/>
+            <!-- <transformer type="star_rating"/> -->
         </property>
 
-        <property name="publishedState" type="string" visibility="never">
+        <property name="workflowPlace" type="string" visibility="never">
             <field-name>workflowPlace</field-name>
             <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
         </property>
-
+        <property name="publishedState" translation="sulu_admin.publish_state_indicator" type="string" visibility="always">
+            <field-name>workflowPlace</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
+            <!--<transformer type="publish_state_indicator" />-->
+        </property>
         <property name="publishedAt" visibility="yes" translation="sulu_testimonials.published_date" type="datetime">
             <field-name>workflowPublished</field-name>
             <entity-name>dimensionContent</entity-name>
             <joins ref="dimensionContent"/>
         </property>
-
         <property name="livePublished" type="date" visibility="never">
             <field-name>workflowPublished</field-name>
             <entity-name>dimensionContent</entity-name>
@@ -156,8 +146,7 @@
             <entity-name>dimensionContent</entity-name>
             <joins ref="dimensionContent"/>
         </property>
-
-        <concatenation-property name="creator" translation="sulu_admin.creator" visibility="yes" searchability="yes" glue=" ">
+        <concatenation-property name="creator" translation="sulu_admin.creator" visibility="yes" searchability="yes">
             <field>
                 <field-name>firstName</field-name>
                 <entity-name>creatorContact</entity-name>
@@ -169,14 +158,12 @@
                 <joins ref="creatorContact"/>
             </field>
         </concatenation-property>
-
         <property name="changed" translation="sulu_admin.changed" type="datetime" visibility="no">
             <field-name>changed</field-name>
             <entity-name>dimensionContent</entity-name>
             <joins ref="dimensionContent"/>
         </property>
-
-        <concatenation-property name="changer" translation="sulu_admin.changer" visibility="no" searchability="yes" glue=" ">
+        <concatenation-property name="changer" translation="sulu_admin.changer" visibility="no" searchability="yes">
             <field>
                 <field-name>firstName</field-name>
                 <entity-name>changerContact</entity-name>

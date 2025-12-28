@@ -53,21 +53,6 @@
                     </params>
                 </property>
 
-                <property name="date" type="date" mandatory="true" colspan="6">
-                    <meta>
-                        <title>sulu_testimonials.date</title>
-                    </meta>
-                </property>
-                <property name="showDate" type="checkbox" colspan="6">
-                    <meta>
-                        <title>sulu_testimonials.show_date</title>
-                    </meta>
-                    <params>
-                        <param name="type" value="toggler"/>
-                        <param name="default_value" value="true"/>
-                    </params>
-                </property>
-
                 <property name="rating" type="single_select" mandatory="true" colspan="6">
                     <meta>
                         <title>sulu_testimonials.rating</title>
@@ -100,40 +85,7 @@
                 </property>
             </properties>
         </section>
-        <section name="optional">
-            <meta>
-                <title>sulu_testimonials.header.optional</title>
-            </meta>
-            <properties>
 
-                <property name="website" type="url" colspan="6">
-                    <meta>
-                        <title>sulu_testimonials.link</title>
-                    </meta>
-
-                    <params>
-                        <param name="defaults" type="collection">
-                            <param name="scheme" value="https://"/>
-                            <param name="specific_part" value="www.google.com"/>
-                        </param>
-                        <param name="schemes" type="collection">
-                            <param name="https://"/>
-                            <param name="http://"/>
-                        </param>
-                    </params>
-                </property>
-
-                <property name="image" type="single_media_selection" colspan="6">
-                    <meta>
-                        <title>sulu_testimonials.image</title>
-                    </meta>
-                    <params>
-                        <param name="types" value="image"/>
-                    </params>
-                </property>
-
-            </properties>
-        </section>
     </properties>
 
 </template>

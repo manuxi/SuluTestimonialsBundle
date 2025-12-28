@@ -39,6 +39,23 @@ class DoctrineListRepresentationFactory
         $listBuilder = $this->listBuilderFactory->create($fieldDescriptors['id']->getEntityName());
         $this->restHelper->initializeListBuilder($listBuilder, $fieldDescriptors);
 
+        if (isset($fieldDescriptors['image'])) {
+            $listBuilder->addSelectField($fieldDescriptors['image']);
+        }
+
+        if (isset($fieldDescriptors['workflowPlace'])) {
+            $listBuilder->addSelectField($fieldDescriptors['workflowPlace']);
+        }
+        if (isset($fieldDescriptors['publishedState'])) {
+            $listBuilder->addSelectField($fieldDescriptors['publishedState']);
+        }
+        if (isset($fieldDescriptors['published'])) {
+            $listBuilder->addSelectField($fieldDescriptors['published']);
+        }
+        if (isset($fieldDescriptors['livePublished'])) {
+            $listBuilder->addSelectField($fieldDescriptors['livePublished']);
+        }
+
         foreach ($parameters as $key => $value) {
             $listBuilder->setParameter($key, $value);
         }
@@ -46,8 +63,6 @@ class DoctrineListRepresentationFactory
         foreach ($filters as $key => $value) {
             $listBuilder->where($fieldDescriptors[$key], $value);
         }
-
-
 
         $list = $listBuilder->execute();
 
@@ -63,6 +78,7 @@ class DoctrineListRepresentationFactory
 
         $list = $this->addGhostLocaleToListElements($list, $parameters['locale'] ?? null);
         $list = $this->addImagesToListElements($list, $parameters['locale'] ?? null);
+        $list = $this->addPublishStateToListElements($list, $listKey);
 
         return new PaginatedRepresentation(
             $list,
@@ -117,5 +133,26 @@ class DoctrineListRepresentationFactory
         }
 
         return $listeElements;
+    }
+
+    private function addPublishStateToListElements(array $listElements, ?string $listKey = null): array
+    {
+        foreach ($listElements as $key => $element) {
+            if ('testimonials_published' === $listKey) {
+                $listElements[$key]['publishedState'] = true;
+                $listElements[$key]['workflowPlace'] = 'published';
+                continue;
+            }
+
+            if (empty($element['published']) && !empty($element['livePublished'])) {
+                $listElements[$key]['published'] = $element['livePublished'];
+            }
+
+            $workflowPlace = $element['publishedState'] ?? $element['workflowPlace'] ?? null;
+            $listElements[$key]['workflowPlace'] = $workflowPlace;
+            $listElements[$key]['publishedState'] = 'published' === $workflowPlace;
+        }
+
+        return $listElements;
     }
 }

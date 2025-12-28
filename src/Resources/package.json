@@ -1,0 +1,22 @@
+{
+    "name": "@manuxi/sulu-testimonials-bundle",
+    "version": "3.0.0",
+    "description": "Admin JS for SuluTestimonialsBundle",
+    "main": "js/index.js",
+    "scripts": {
+        "build": "webpack --mode production",
+        "watch": "webpack --mode development --watch"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "webpack": "^5.88.0",
+        "webpack-cli": "^5.1.0",
+        "css-loader": "^6.8.0",
+        "sass": "^1.63.0",
+        "sass-loader": "^13.3.0",
+        "style-loader": "^3.3.0"
+    },
+    "peerDependencies": {
+        "sulu-admin-bundle": "^3.0.0"
+    }
+}

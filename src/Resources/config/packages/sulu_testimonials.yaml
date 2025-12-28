@@ -1,0 +1,6 @@
+sulu_testimonials:
+    rating:
+        max_value: 5            # 5 or 10 stars
+        default_value: 3        # Default rating value
+        use_star_symbols: false # Use stars in selection
+        use_star_widget: true   # Use interactive stars instead of dropdown

@@ -1,0 +1,55 @@
+/*@import 'sulu-admin-bundle/containers/Application/colors.scss';*/
+
+.container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stars {
+    display: flex;
+    gap: 2px;
+}
+
+.star {
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+    color: #d1d5db;
+    user-select: none;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+
+    &:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+}
+
+.filled {
+    color: #f59e0b;
+}
+
+.hovered {
+    color: #fbbf24;
+    transform: scale(1.15);
+}
+
+.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+
+    &:hover {
+        transform: none;
+    }
+}
+
+.value {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+    min-width: 40px;
+}

@@ -43,7 +43,14 @@ class TestimonialRepository extends ServiceEntityRepository
 
     public function findById(int $id): ?Testimonial
     {
-        return $this->find($id);
+        //return $this->find($id);
+        $qb = $this->createQueryBuilder('testimonial')
+            ->leftJoin('testimonial.dimensionContents', 'dimensionContent')
+            ->addSelect('dimensionContent')
+            ->where('testimonial.id = :id')
+            ->setParameter('id', $id);
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     public function findByIds(array $ids, string $locale, string $stage = DimensionContentInterface::STAGE_LIVE): array

@@ -22,7 +22,7 @@ class Testimonial implements ContentRichEntityInterface
 
     public const RESOURCE_KEY = 'testimonials';
     public const FORM_KEY = 'testimonial';
-    public const LIST_KEY = 'testimonials';
+    public const LIST_KEY = 'testimonials_list';
     public const SECURITY_CONTEXT = 'sulu.testimonials.testimonials';
     public const TEMPLATE_TYPE = 'testimonial';
 
