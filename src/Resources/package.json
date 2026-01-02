@@ -7,7 +7,9 @@
         "build": "webpack --mode production",
         "watch": "webpack --mode development --watch"
     },
-    "dependencies": {},
+    "dependencies": {
+        "react-select": "^5.7.0"
+    },
     "devDependencies": {
         "webpack": "^5.88.0",
         "webpack-cli": "^5.1.0",
@@ -17,6 +19,7 @@
         "style-loader": "^3.3.0"
     },
     "peerDependencies": {
+        "react": "^17.0.0 || ^18.0.0",
         "sulu-admin-bundle": "^3.0.0"
     }
 }

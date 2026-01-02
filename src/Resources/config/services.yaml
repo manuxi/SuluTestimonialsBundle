@@ -143,6 +143,7 @@ services:
             $translator: '@translator.default'
             $maxValue: '%sulu_testimonials.rating.max_value%'
             $defaultValue: '%sulu_testimonials.rating.default_value%'
+            $useStarSymbols: '%sulu_testimonials.rating.use_star_symbols%'
         public: true
 
     sulu_testimonials.rating_selection:

@@ -1,55 +1,76 @@
-/*@import 'sulu-admin-bundle/containers/Application/colors.scss';*/
+@import 'sulu-admin-bundle/containers/Application/colors.scss';
 
+$starColor: #ffc107;
+$starEmptyColor: $silverChalice;
+
+/* Star Rating Input Component */
 .container {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-}
-
-.stars {
-    display: flex;
-    gap: 2px;
+    font-size: 24px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .star {
-    font-size: 24px;
-    cursor: pointer;
-    transition: color 0.15s ease, transform 0.15s ease;
-    color: #d1d5db;
-    user-select: none;
+    margin-right: 2px;
+    color: $starColor;
+    transition: color 0.1s;
+
+    &.empty {
+        color: $starEmptyColor;
+    }
+
+    &.readOnly {
+        cursor: default;
+    }
 
     &:hover {
         transform: scale(1.1);
     }
-
-    &:focus {
-        outline: 2px solid #3b82f6;
-        outline-offset: 2px;
-        border-radius: 2px;
-    }
-}
-
-.filled {
-    color: #f59e0b;
-}
-
-.hovered {
-    color: #fbbf24;
-    transform: scale(1.15);
-}
-
-.disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-
-    &:hover {
-        transform: none;
-    }
 }
 
 .value {
-    font-size: 14px;
-    color: #6b7280;
-    font-weight: 500;
-    min-width: 40px;
+    font-size: 12px;
+    color: $dustyGray;
+    margin-left: 10px;
+}
+
+/* Dropdown Select Styles */
+.dropdownOption {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dropdownStars {
+    position: relative;
+    display: inline-block;
+    line-height: 1;
+}
+
+.starIcon {
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.starsBackground {
+    display: inline-block;
+    color: $starEmptyColor;
+    white-space: nowrap;
+}
+
+.starsForeground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: inline-block;
+    color: $starColor;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.dropdownText {
+    font-size: 12px;
+    color: $dustyGray;
 }

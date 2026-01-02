@@ -137,7 +137,7 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                         Testimonial::TEMPLATE_TYPE => [
                             'default_type' => Testimonial::TEMPLATE_TYPE,
                             'directories' => [
-                                __DIR__ . '/../Resources/config/templates',
+                                __DIR__ . '/../Resources/config/templates/testimonials',
                             ],
                         ],
                     ],

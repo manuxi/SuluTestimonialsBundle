@@ -3,7 +3,7 @@ import React from 'react';
 import { observer } from 'mobx-react';
 import { action, observable, computed } from 'mobx';
 import classNames from 'classnames';
-import starRatingStyles from './starRating.scss';
+import starRatingStyles from './StarRating.scss';
 
 type Props = {
     disabled: boolean,

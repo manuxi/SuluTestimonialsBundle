@@ -55,6 +55,34 @@
 
                         {# Rating #}
                         {% if testimonial.rating is defined and testimonial.rating > 0 %}
+                            {% set ratingValue = testimonial.rating %}
+                            {% set maxRating = 5 %}
+                            {% set starValue = ratingValue %}
+
+                            {% if ratingValue > 5 %}
+                                {% set maxRating = 10 %}
+                                {% set starValue = ratingValue / 2 %}
+                            {% endif %}
+
+                            {% set displayedRating = (starValue * 2)|round / 2 %}
+                            <div class="d-flex align-items-center" aria-label="Rating: {{ ratingValue }}">
+                                {% for i in 1..5 %}
+                                    {% if displayedRating >= i %}
+                                        <span class="fs-4" style="color: #ffc107;">★</span>
+                                    {% elseif displayedRating >= i - 0.5 %}
+                                        <div class="position-relative d-inline-block lh-1">
+                                            <span class="fs-4 text-muted opacity-25">★</span>
+                                            <span class="fs-4 position-absolute top-0 start-0 overflow-hidden" style="width: 50%; color: #ffc107;">★</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="fs-4 text-muted opacity-25">★</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="ms-2 text-muted small">({{ ratingValue }}/{{ maxRating }})</span>
+                            </div>
+                        {% endif %}
+                        {#
+                        {% if testimonial.rating is defined and testimonial.rating > 0 %}
                             <div class="d-flex align-items-center" style="color: #ffc107;" aria-label="Rating: {{ testimonial.rating }}">
                                 {% set maxRating = 5 %}
                                 {% if testimonial.rating > 5 %}{% set maxRating = 10 %}{% endif %}
@@ -69,6 +97,7 @@
                                 <span class="ms-2 text-muted small">({{ testimonial.rating }}/{{ maxRating }})</span>
                             </div>
                         {% endif %}
+                        #}
                     </div>
 
                     {# Footer / Avatar of Contact #}
