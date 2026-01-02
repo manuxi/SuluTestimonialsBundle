@@ -7,7 +7,7 @@
                 <div class="card shadow-sm border-0">
                     <div class="card-body">
                         {# Header / Title #}
-                        <h2 class="card-title h4 mb-3">{{ "sulu_testimonials.title"|trans({}, 'admin') }}: {{ testimonial.title }}</h2>
+                        <h2 class="card-title h4 mb-3">{{ testimonial.title }}</h2>
 
                         <div class="d-flex align-items-start mb-4">
                             {# Testimonial Image #}
@@ -24,9 +24,10 @@
                             {% endif %}
 
                             <div class="flex-grow-1">
+
                                 {# Author / Contact Name #}
-                                {% if testimonial.showContact|default and testimonial.contact is defined and testimonial.contact is not null %}
-                                    <h5 class="mb-0 fw-bold">{{ testimonial.contact.fullName|default('') }}</h5>
+                                {% if testimonial.showContact|default and testimonial.contact|default %}
+                                    <h5 class="mb-0">{{ testimonial.contact.fullName|default('') }}</h5>
                                 {% endif %}
 
                                 {# Organisation #}

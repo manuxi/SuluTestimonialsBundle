@@ -6,6 +6,8 @@ namespace Manuxi\SuluTestimonialsBundle\Controller\Website;
 
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
+use Doctrine\ORM\EntityManagerInterface;
+use Sulu\Bundle\ContactBundle\Entity\Contact;
 use Sulu\Bundle\PreviewBundle\Preview\Preview;
 use Sulu\Bundle\WebsiteBundle\Resolver\TemplateAttributeResolverInterface;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
@@ -26,6 +28,7 @@ class TestimonialsController
         private readonly WebspaceManagerInterface $webspaceManager,
         private readonly RequestStack $requestStack,
         private readonly ContentAggregatorInterface $contentAggregator,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -58,6 +61,13 @@ class TestimonialsController
 
         if (!$content) {
             throw new NotAcceptableHttpException(sprintf('No content found for locale "%s".', $locale));
+        }
+
+        if (!$content->getContact() && $content->getContactId()) {
+            $contact = $this->entityManager->getReference(Contact::class, $content->getContactId());
+            if ($contact) {
+                $content->setContact($contact);
+            }
         }
 
         $parameters = $this->templateAttributeResolver->resolve([

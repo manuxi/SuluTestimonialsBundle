@@ -40,6 +40,7 @@ services:
             - '@sulu_core.webspace.webspace_manager'
             - '@request_stack'
             - '@sulu_content.content_aggregator'
+            - '@doctrine.orm.entity_manager'
         tags:
             - { name: controller.service_arguments }
             - { name: sulu.context, context: website }

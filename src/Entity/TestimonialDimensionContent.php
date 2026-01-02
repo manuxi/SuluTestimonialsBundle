@@ -66,6 +66,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
     protected ?\DateTimeImmutable $date = null;
     protected ?MediaInterface $image = null;
     protected ?ContactInterface $contact = null;
+    protected ?int $contactId = null;
     protected ?string $website = null;
 
     public function __construct(Testimonial $testimonial)
@@ -197,6 +198,11 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    public function getContactId(): ?int
+    {
+        return $this->contactId;
+    }
+
     public function getWebsite(): ?string
     {
         return $this->website;
@@ -266,6 +272,12 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
 
         if (isset($templateData['contact']) && $templateData['contact'] instanceof ContactInterface) {
             $this->contact = $templateData['contact'];
+        }
+
+        if (array_key_exists('contact', $templateData) &&
+            (is_int($templateData['contact']) || is_string($templateData['contact']))
+        ) {
+            $this->contactId = (int) $templateData['contact'];
         }
     }
 
