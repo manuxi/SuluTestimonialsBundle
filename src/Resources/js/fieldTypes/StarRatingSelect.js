@@ -6,38 +6,47 @@ import {toJS} from 'mobx';
 import type {FieldTypeProps} from 'sulu-admin-bundle/types';
 import starRatingStyles from './StarRating.scss';
 
-const renderStars = (label: string) => {
-    const match = label.match(/^([★⯪☆]+)\s*(.*)$/);
+type SchemaOptions = {
+    values?: {
+        value: Array<{name: string, title?: string}>,
+    },
+    max_value?: {
+        value: number,
+    },
+    show_text?: {
+        value: boolean,
+    },
+};
 
-    if (!match) {
-        return label;
+const renderStars = (rating: number, maxValue: number, showText: boolean) => {
+    const displayStars = 5;
+    const fillPercent = (rating / maxValue) * 100;
+
+    const backgroundStars = [];
+    const foregroundStars = [];
+
+    for (let i = 1; i <= displayStars; i++) {
+        backgroundStars.push(<span key={i} className={starRatingStyles.starIcon}>★</span>);
+        foregroundStars.push(<span key={i} className={starRatingStyles.starIcon}>★</span>);
     }
 
-    const starsString = match[1];
-    const text = match[2];
-
-    const stars = starsString.split('').map((char, index) => {
-        let className = starRatingStyles.dropdownStar;
-        if (char === '☆') {
-            className += ' ' + starRatingStyles.empty;
-        }
-        return (
-            <span key={index} className={className}>
-                {char}
-            </span>
-        );
-    });
-
     return (
-        <div className={starRatingStyles.dropdownOption}>
-            <span className={starRatingStyles.dropdownStars}>{stars}</span>
-            <span className={starRatingStyles.dropdownText}>{text}</span>
-        </div>
+        <span className={starRatingStyles.dropdownOption}>
+            <span className={starRatingStyles.dropdownStars}>
+                <span className={starRatingStyles.starsBackground}>{backgroundStars}</span>
+                <span className={starRatingStyles.starsForeground} style={{width: `${fillPercent}%`}}>
+                    {foregroundStars}
+                </span>
+            </span>
+            {showText && (
+                <span className={starRatingStyles.dropdownText}>({rating}/{maxValue})</span>
+            )}
+        </span>
     );
 };
 
 @observer
-class StarRatingSelect extends React.Component<FieldTypeProps<string>> {
+class StarRatingSelect extends React.Component<FieldTypeProps<string, SchemaOptions>> {
     handleChange = (value: string | number) => {
         const {onChange, onFinish} = this.props;
         onChange(value);
@@ -47,12 +56,9 @@ class StarRatingSelect extends React.Component<FieldTypeProps<string>> {
     render() {
         const {dataPath, error, value, schemaOptions} = this.props;
 
-        const rawValues: Array<any> = toJS(schemaOptions?.values?.value || []);
-
-        const selectValues = rawValues.map((item) => ({
-            value: item.name,
-            label: item.title || item.name,
-        }));
+        const rawValues: Array<{name: string, title?: string}> = toJS(schemaOptions?.values?.value || []);
+        const maxValue: number = schemaOptions?.max_value?.value || 10;
+        const showText: boolean = schemaOptions?.show_text?.value !== false;
 
         return (
             <SingleSelect
@@ -61,11 +67,14 @@ class StarRatingSelect extends React.Component<FieldTypeProps<string>> {
                 onChange={this.handleChange}
                 valid={!error}
             >
-                {selectValues.map((option) => (
-                    <SingleSelect.Option key={option.value} value={option.value}>
-                        {renderStars(option.label)}
-                    </SingleSelect.Option>
-                ))}
+                {rawValues.map((item) => {
+                    const rating = parseInt(item.name, 10) || 0;
+                    return (
+                        <SingleSelect.Option key={item.name} value={item.name}>
+                            {renderStars(rating, maxValue, showText)}
+                        </SingleSelect.Option>
+                    );
+                })}
             </SingleSelect>
         );
     }
