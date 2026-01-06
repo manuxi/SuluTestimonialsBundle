@@ -148,6 +148,12 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                 'detail' => 'sulu_testimonials.get_testimonial',
                             ],
                         ],
+                        'testimonials_versions' => [
+                            'routes' => [
+                                'list' => 'sulu_testimonials.get_testimonial_versions',
+                                'detail' => 'sulu_testimonials.get_testimonial',
+                            ],
+                        ],
                         'testimonials-settings' => [
                             'routes' => [
                                 'detail' => 'sulu_testimonials.get_testimonials-settings',

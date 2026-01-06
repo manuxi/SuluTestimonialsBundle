@@ -1,7 +1,11 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Manuxi\SuluTestimonialsBundle\Admin;
+
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
+use Sulu\Bundle\ActivityBundle\Infrastructure\Sulu\Admin\View\ActivityViewBuilderFactoryInterface;
 use Sulu\Bundle\AdminBundle\Admin\Admin;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItem;
 use Sulu\Bundle\AdminBundle\Admin\Navigation\NavigationItemCollection;
@@ -12,23 +16,30 @@ use Sulu\Component\Localization\Manager\LocalizationManagerInterface;
 use Sulu\Component\Security\Authorization\PermissionTypes;
 use Sulu\Component\Security\Authorization\SecurityCheckerInterface;
 use Sulu\Content\Infrastructure\Sulu\Admin\ContentViewBuilderFactoryInterface;
+
 class TestimonialsAdmin extends Admin
 {
     public const NAV_ITEM = 'sulu_testimonials.testimonials';
+
     public const LIST_VIEW = 'sulu_testimonials.testimonials.list';
+
     public const ADD_TABS_VIEW = 'sulu_testimonials.testimonial.add_tabs';
     public const ADD_FORM_VIEW = 'sulu_testimonials.testimonial.add_form';
     public const ADD_FORM_DETAILS_VIEW = 'sulu_testimonials.testimonial.add_form.details';
+
     public const EDIT_TABS_VIEW = 'sulu_testimonials.testimonial.edit_tabs';
     public const EDIT_FORM_VIEW = 'sulu_testimonials.testimonial.edit_form';
     public const EDIT_FORM_DETAILS_VIEW = 'sulu_testimonials.testimonial.edit_form.details';
+
     public function __construct(
         private readonly ViewBuilderFactoryInterface $viewBuilderFactory,
         private readonly ContentViewBuilderFactoryInterface $contentViewBuilderFactory,
+        private readonly ActivityViewBuilderFactoryInterface $activityViewBuilderFactory,
         private readonly SecurityCheckerInterface $securityChecker,
         private readonly LocalizationManagerInterface $localizationManager,
     ) {
     }
+
     public function configureNavigationItems(NavigationItemCollection $navigationItemCollection): void
     {
         if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::EDIT)) {
@@ -43,12 +54,15 @@ class TestimonialsAdmin extends Admin
             $navigationItemCollection->add($rootNavigationItem);
         }
     }
+
     public function configureViews(ViewCollection $viewCollection): void
     {
         $locales = $this->localizationManager->getLocales();
         $resourceKey = Testimonial::RESOURCE_KEY;
-        $formToolbarActions = [];
+
         $listToolbarActions = [];
+        $formToolbarActions = [];
+
         if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::ADD)) {
             $listToolbarActions[] = new ToolbarAction('sulu_admin.add');
         }
@@ -67,6 +81,7 @@ class TestimonialsAdmin extends Admin
         if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::DELETE)) {
             $formToolbarActions[] = new ToolbarAction('sulu_admin.delete');
         }
+
         if ($this->securityChecker->hasPermission(Testimonial::SECURITY_CONTEXT, PermissionTypes::VIEW)) {
             // List View
             $viewCollection->add(
@@ -80,6 +95,7 @@ class TestimonialsAdmin extends Admin
                     ->setEditView(static::EDIT_TABS_VIEW)
                     ->addToolbarActions($listToolbarActions)
             );
+
             // Add Tabs View
             $viewCollection->add(
                 $this->viewBuilderFactory->createResourceTabViewBuilder(static::ADD_TABS_VIEW, '/testimonials/:locale/add')
@@ -87,6 +103,7 @@ class TestimonialsAdmin extends Admin
                     ->addLocales($locales)
                     ->setBackView(static::LIST_VIEW)
             );
+
             // Edit Tabs View
             $viewCollection->add(
                 $this->viewBuilderFactory->createResourceTabViewBuilder(static::EDIT_TABS_VIEW, '/testimonials/:locale/:id')
@@ -95,7 +112,8 @@ class TestimonialsAdmin extends Admin
                     ->setBackView(static::LIST_VIEW)
                     ->setTitleProperty('title')
             );
-            // Content Views (Details, SEO, Excerpt)
+
+            // Content Views (Details, SEO, Excerpt, Insights with Versions)
             $viewBuilders = $this->contentViewBuilderFactory->createViews(
                 Testimonial::class,
                 static::EDIT_TABS_VIEW,
@@ -103,14 +121,41 @@ class TestimonialsAdmin extends Admin
                 Testimonial::SECURITY_CONTEXT,
                 []
             );
+
             foreach ($viewBuilders as $viewBuilder) {
                 if (method_exists($viewBuilder, 'addToolbarActions') && $viewBuilder->getName() === static::EDIT_FORM_DETAILS_VIEW) {
                     $viewBuilder->addToolbarActions($formToolbarActions);
                 }
                 $viewCollection->add($viewBuilder);
             }
+
+            // Activity View (must be added manually after ContentViewBuilderFactory)
+            if ($this->activityViewBuilderFactory->hasActivityListPermission()) {
+                $insightsResourceTabViewName = static::EDIT_TABS_VIEW.'.insights';
+
+                $viewCollection->add(
+                    $this->viewBuilderFactory
+                        ->createResourceTabViewBuilder($insightsResourceTabViewName, '/insights')
+                        ->setResourceKey($resourceKey)
+                        ->setTabOrder(6144)
+                        ->setTabTitle('sulu_admin.insights')
+                        ->setTitleProperty('')
+                        ->setParent(static::EDIT_TABS_VIEW)
+                );
+
+                $viewCollection->add(
+                    $this->activityViewBuilderFactory
+                        ->createActivityListViewBuilder(
+                            $insightsResourceTabViewName.'.activity',
+                            '/activity',
+                            Testimonial::RESOURCE_KEY
+                        )
+                        ->setParent($insightsResourceTabViewName)
+                );
+            }
         }
     }
+
     public function getSecurityContexts(): array
     {
         return [
@@ -127,6 +172,7 @@ class TestimonialsAdmin extends Admin
             ],
         ];
     }
+
     public function getConfigKey(): ?string
     {
         return 'sulu_testimonials';

@@ -1,6 +1,7 @@
 sulu_testimonials:
     testimonial: "Testimonial"
     testimonials: "Testimonials"
+    verified: "verifiziert"
 search:
     index:
         testimonials: "Testimonials"

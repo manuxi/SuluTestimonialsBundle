@@ -1,10 +1,10 @@
 {% extends "base.html.twig" %}
 
 {% block content %}
-    <div class="container mt-4">
+    <div class="container my-3">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card shadow-sm border-0">
+                <div class="card shadow-sm">
                     <div class="card-body">
                         {# Header / Title #}
                         <h2 class="card-title h4 mb-3">{{ testimonial.title }}</h2>
@@ -110,7 +110,7 @@
                                      class="rounded-circle me-2 border border-white shadow-sm"
                                      width="30" height="30"
                                      alt="{{ testimonial.contact.fullName|default('') }}">
-                                <span class="small text-muted">{{ "sulu_testimonials.verified_customer"|trans({}, 'admin') }}</span>
+                                <span class="small text-muted">{{ "sulu_testimonials.verified"|trans }}</span>
                             {% endif %}
                         </div>
                     {% endif %}

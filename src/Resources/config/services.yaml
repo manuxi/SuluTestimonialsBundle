@@ -1,12 +1,12 @@
 services:
     # Admin Classes
-    sulu_testimonials.admin.testimonials:
-        class: Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAdmin
+    Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAdmin:
         arguments:
-            - '@sulu_admin.view_builder_factory'
-            - '@sulu_content.content_view_builder_factory'
-            - '@sulu_security.security_checker'
-            - '@sulu.core.localization_manager'
+            $viewBuilderFactory: '@sulu_admin.view_builder_factory'
+            $contentViewBuilderFactory: '@sulu_content.content_view_builder_factory'
+            $activityViewBuilderFactory: '@sulu_activity.activity_list_view_builder_factory'
+            $securityChecker: '@sulu_security.security_checker'
+            $localizationManager: '@sulu.core.localization_manager'
         tags:
             - { name: sulu.admin }
             - { name: sulu.context, context: admin }
