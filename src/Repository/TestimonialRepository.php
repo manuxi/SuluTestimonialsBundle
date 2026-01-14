@@ -207,32 +207,19 @@ class TestimonialRepository extends ServiceEntityRepository
     ): void {
         $locale = $filters['locale'] ?? null;
         $stage = $filters['stage'] ?? DimensionContentInterface::STAGE_DRAFT;
-        $version = $filters['version'] ?? DimensionContentInterface::CURRENT_VERSION;
 
-        $queryBuilder->leftJoin(
-            'testimonial.dimensionContents',
-            'dimensionContent',
-            'WITH',
-            'dimensionContent.stage = :stage AND dimensionContent.version = :version'
-            . ($locale ? ' AND dimensionContent.locale = :locale' : '')
-        );
+        $queryBuilder->leftJoin('testimonial.dimensionContents', 'dimensionContent');
 
-        $queryBuilder->setParameter('stage', $stage);
-        $queryBuilder->setParameter('version', $version);
-
-        if ($locale) {
-            $queryBuilder->setParameter('locale', $locale);
-        }
-
-        $queryBuilder->addSelect('dimensionContent');
-
-        if (!empty($selects)) {
+        $normalizedSelects = $this->normalizeSelects($selects);
+        if (!empty($normalizedSelects)) {
             $this->dimensionContentQueryEnhancer->addSelects(
                 $queryBuilder,
                 TestimonialDimensionContent::class,
                 ['locale' => $locale, 'stage' => $stage],
-                $selects
+                $normalizedSelects
             );
+        } else {
+            $queryBuilder->addSelect('dimensionContent');
         }
     }
 
