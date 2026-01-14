@@ -57,11 +57,10 @@
                         {# Rating #}
                         {% if testimonial.rating is defined and testimonial.rating > 0 %}
                             {% set ratingValue = testimonial.rating %}
-                            {% set maxRating = 5 %}
+                            {% set maxRating = ratingMaxValue|default(5) %}
                             {% set starValue = ratingValue %}
 
-                            {% if ratingValue > 5 %}
-                                {% set maxRating = 10 %}
+                            {% if maxRating == 10 %}
                                 {% set starValue = ratingValue / 2 %}
                             {% endif %}
 

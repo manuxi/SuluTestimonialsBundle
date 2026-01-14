@@ -41,6 +41,7 @@ services:
             - '@request_stack'
             - '@sulu_content.content_aggregator'
             - '@doctrine.orm.entity_manager'
+            - '%sulu_testimonials.rating.max_value%'
         tags:
             - { name: controller.service_arguments }
             - { name: sulu.context, context: website }

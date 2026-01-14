@@ -29,6 +29,7 @@ class TestimonialsController
         private readonly RequestStack $requestStack,
         private readonly ContentAggregatorInterface $contentAggregator,
         private readonly EntityManagerInterface $entityManager,
+        private readonly int $ratingMaxValue = 5,
     ) {
     }
 
@@ -41,8 +42,6 @@ class TestimonialsController
         $request = $this->requestStack->getCurrentRequest();
         $locale = $request ? $request->getLocale() : 'en';
 
-        // Use ContentAggregator to properly resolve DimensionContent
-        // This handles merging unlocalized + localized content correctly
         $stage = $preview ? DimensionContentInterface::STAGE_DRAFT : DimensionContentInterface::STAGE_LIVE;
 
         /** @var TestimonialDimensionContent|null $content */
@@ -55,7 +54,6 @@ class TestimonialsController
         );
 
         if (!$content || !$content->getTitle()) {
-            // Fallback: Try to find directly in collection (for preview with injected content)
             $content = $this->findDimensionContentInCollection($testimonial, $locale, $stage);
         }
 
@@ -73,6 +71,7 @@ class TestimonialsController
         $parameters = $this->templateAttributeResolver->resolve([
             'testimonial' => $content,
             'localizations' => $this->getLocalizationsArrayForEntity($testimonial),
+            'ratingMaxValue' => $this->ratingMaxValue,
         ]);
 
         $viewTemplate = $view . '.html.twig';
