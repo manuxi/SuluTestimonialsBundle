@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<list xmlns="http://schemas.sulu.io/list-builder/list">
+    <key>testimonials_published</key>
+
+    <joins name="dimensionContent">
+        <join>
+            <entity-name>dimensionContent</entity-name>
+            <field-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial.dimensionContents</field-name>
+            <method>INNER</method>
+            <condition>dimensionContent.locale = :locale AND dimensionContent.stage = 'live' AND dimensionContent.version = 0</condition>
+        </join>
+    </joins>
+
+    <joins name="testimonialContact" ref="dimensionContent">
+        <join>
+            <entity-name>testimonialContact</entity-name>
+            <field-name>dimensionContent.contact</field-name>
+            <method>LEFT</method>
+        </join>
+    </joins>
+
+    <joins name="image" ref="dimensionContent">
+        <join>
+            <entity-name>Sulu\Bundle\MediaBundle\Entity\Media</entity-name>
+            <field-name>dimensionContent.image</field-name>
+            <method>LEFT</method>
+        </join>
+    </joins>
+
+    <properties>
+        <property name="id" translation="sulu_admin.id" visibility="no">
+            <field-name>id</field-name>
+            <entity-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial</entity-name>
+        </property>
+
+        <property name="image" visibility="always" translation="sulu_testimonials.image" sortable="false">
+            <field-name>id</field-name>
+            <entity-name>Sulu\Bundle\MediaBundle\Entity\Media</entity-name>
+            <joins ref="image"/>
+            <transformer type="thumbnails"/>
+        </property>
+
+        <property name="title" visibility="always" searchability="yes" translation="sulu_testimonials.title">
+            <field-name>title</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
+        </property>
+
+        <concatenation-property name="contact" translation="sulu_testimonials.contact" visibility="yes" searchability="yes">
+            <field>
+                <field-name>firstName</field-name>
+                <entity-name>testimonialContact</entity-name>
+                <joins ref="testimonialContact"/>
+            </field>
+            <field>
+                <field-name>lastName</field-name>
+                <entity-name>testimonialContact</entity-name>
+                <joins ref="testimonialContact"/>
+            </field>
+        </concatenation-property>
+
+        <property name="rating" translation="sulu_testimonials.rating" visibility="yes" sortable="true">
+            <field-name>rating</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
+            <!-- <transformer type="star_rating"/> -->
+        </property>
+
+        <property name="publishedAt" visibility="yes" translation="sulu_testimonials.published_date" type="datetime">
+            <field-name>workflowPublished</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
+        </property>
+
+        <property name="locale" translation="sulu_admin.locale" visibility="never">
+            <field-name>locale</field-name>
+            <entity-name>dimensionContent</entity-name>
+        </property>
+
+        <property name="stage" visibility="never">
+            <field-name>stage</field-name>
+            <entity-name>dimensionContent</entity-name>
+            <joins ref="dimensionContent"/>
+        </property>
+    </properties>
+</list>

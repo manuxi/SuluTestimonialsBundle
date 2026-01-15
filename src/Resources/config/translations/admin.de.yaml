@@ -1,4 +1,8 @@
+# Main namespace for testimonial-related translations
 sulu_testimonials:
+    # General properties
+    testimonial: "Testimonial"
+    testimonials: "Testimonials"
     id: "Id"
     name: "Testimonial"
     title: "Titel"
@@ -6,23 +10,40 @@ sulu_testimonials:
     date: "Datum"
     contact: "Nutzer"
     rating: "Bewertung"
+    source: "Quelle"
+    image: "Bild"
+    link: "Verlinkung"
+    website: "Webseite"
+
+    # Publishing and state management
     publish: "veröffentlichen"
     unpublish: "Veröffentlichen beenden"
     published: "veröffentlicht"
     published_date: "Veröffentlichungsdatum"
     published_at: "Veröffentlicht am"
-    link: "Verlinkung"
-    website: "Webseite"
-    image: "Bild"
-    source: "Quelle"
+
+    # Display toggles
     show_author: "Autor anzeigen"
     show_contact: "Nutzer anzeigen"
     show_organisation: "Organisation anzeigen"
     show_date: "Datum anzeigen"
+
+    # Creator and change information
     created_date: "Erstellt am"
     creator: "Erstellt von"
     changed_date: "Letzte Änderung am"
     changer: "Letzte Änderung von"
+
+    # Section headers in testimonial form
+    header:
+        content: "Inhalt"
+        additional: "Zusätzliche Optionen"
+        mandatory: "Verpflichtende Felder"
+        optional: "Optionale Felder"
+        change_author: "Autor-Information anpassen"
+        created_changed: "Erstellungs- und Änderungsinformationen"
+
+    # Rating values (text format)
     rates:
         default:
             0: "Keine Bewertung"
@@ -55,32 +76,35 @@ sulu_testimonials:
             8: "★★★★☆ (8/10)"
             9: "★★★★⯪ (9/10)"
             10: "★★★★★ (10/10)"
+
+    # Template names
     template:
         basic: "Basic"
         extended: "Erweitert"
-    header:
-        content: "Inhalt"
-        additional: "Zusätzliche Optionen"
-        mandatory: "Verpflichtende Felder"
-        optional: "Optionale Felder"
-        change_author: "Autor-Information anpassen"
-        created_changed: "Erstellungs- und Änderungsinformationen"
-    testimonial_selection_label: "{count} {count, plural, =1 {Testimonial} other {Testimonials}} ausgewählt"
+
+    # Selection and overlay labels
+    testimonials_selection_label: "{count} {count, plural, =1 {Testimonial} other {Testimonials}} ausgewählt"
     select_testimonial: "Testimonial auswählen"
-    select_testimoniallist: "Testimonial auswählen"
+    select_testimonials: "Testimonials auswählen"
     no_testimonial_selected: "Kein Testimonial ausgewählt"
+    empty_testimoniallist: "Bitte Testimonial wählen..."
+    enable_testimonial: "Testimonial aktivieren"
     publish_testimonial: "Testimonial veröffentlichen"
+
+    # Webspace settings
     webspace_settings: "Webspace Einstellungen"
     customize_webspace_settings: "Webspace Einstellungen anpassen"
     main_webspace: "Haupt Webspace"
     additional_webspace: "Zusätzliche Webspaces"
+
+    # Shadow functionality
     shadow_testimonial: "Schatten-Testimonial"
     enable_shadow_testimonial: "Schatten-Testimonial aktivieren"
-    search_name: "Testimonials"
-    empty_testimoniallist: "Bitte Testimonial wählen..."
-    testimonial: "Testimonial"
-    testimonials: "Testimonials"
 
+    # Search integration
+    search_name: "Testimonials"
+
+    # Settings section
     config:
         tab: "Einstellungen"
         title:
@@ -92,10 +116,14 @@ sulu_testimonials:
             toggle_hero: "Standard Hero anzeigen"
             toggle_breadcrumbs: "Breadcrumbs anzeigen"
             page_testimonials: "Übersichtsseite Alle Testimonials"
+
+    # Search index names
     search:
         index:
             testimonials: "Testimonials (Entwurf)"
             testimonials_published: "Testimonials"
+
+# Activity bundle integration
 sulu_activity:
     resource:
         testimonials: "Testimonials"
@@ -108,4 +136,4 @@ sulu_activity:
             published: "{userFullName} hat Testimonial \"{resourceTitle}\" veröffentlicht."
             unpublished: "{userFullName} hat die Veröffentlichung von Testimonial \"{resourceTitle}\" beendet."
         testimonials_settings:
-            modified: "{userFullName} hat die Testimonials-Einstellungen  geändert."
+            modified: "{userFullName} hat die Testimonials-Einstellungen geändert."

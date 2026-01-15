@@ -1,4 +1,8 @@
+# Main namespace for testimonial-related translations
 sulu_testimonials:
+    # General properties
+    testimonial: "Testimonial"
+    testimonials: "Testimonials"
     id: "Id"
     name: "Testimonial"
     title: "Title"
@@ -6,23 +10,31 @@ sulu_testimonials:
     date: "Date"
     contact: "Contact"
     rating: "Rating"
+    source: "Source"
+    image: "Image"
+    link: "Link"
+    website: "Website"
+
+    # Publishing and state management
     publish: "publish"
     unpublish: "unpublish"
     published: "published"
     published_date: "Publish Date"
     published_at: "Published at"
-    link: "Link"
-    website: "Website"
-    image: "Image"
-    source: "Source"
+
+    # Display toggles
     show_author: "Show Author"
     show_contact: "Show Contact"
     show_organisation: "Show Organisation"
     show_date: "Show Date"
+
+    # Creator and change information
     created_date: "Created at"
     creator: "Created by"
     changed_date: "Last Change at"
     changer: "Last change by"
+
+    # Section headers in testimonial form
     header:
         content: "Content"
         additional: "Additional Options"
@@ -30,18 +42,21 @@ sulu_testimonials:
         optional: "Optional Fields"
         change_author: "Modify Author Information"
         created_changed: "Created and Modify Information"
+
+    # Rating values (text format)
     rates:
-        0: "No rating"
-        1: "1 star"
-        2: "2 stars"
-        3: "3 stars"
-        4: "4 stars"
-        5: "5 stars"
-        6: "6 stars"
-        7: "7 stars"
-        8: "8 stars"
-        9: "9 stars"
-        10: "10 stars"
+        default:
+            0: "No rating"
+            1: "1 star"
+            2: "2 stars"
+            3: "3 stars"
+            4: "4 stars"
+            5: "5 stars"
+            6: "6 stars"
+            7: "7 stars"
+            8: "8 stars"
+            9: "9 stars"
+            10: "10 stars"
         five:
             0: "☆☆☆☆☆ (0/5)"
             1: "★☆☆☆☆ (1/5)"
@@ -61,26 +76,35 @@ sulu_testimonials:
             8: "★★★★☆ (8/10)"
             9: "★★★★⯪ (9/10)"
             10: "★★★★★ (10/10)"
+
+    # Template names
     template:
         basic: "Basic"
-        extended: "Erweitert"
-    testimonial_selection_label: "{count} {count, plural, =1 {testimonial} other {testimonials}} selected"
+        extended: "Extended"
+
+    # Selection and overlay labels
+    testimonials_selection_label: "{count} {count, plural, =1 {testimonial} other {testimonials}} selected"
     select_testimonial: "Select testimonial"
-    select_testimoniallist: "Select testimonial"
+    select_testimonials: "Select testimonials"
     no_testimonial_selected: "No testimonial selected"
+    empty_testimoniallist: "Please choose testimonial..."
     enable_testimonial: "Enable testimonial"
     publish_testimonial: "Publish Testimonial"
+
+    # Webspace settings
     webspace_settings: "Webspace settings"
     customize_webspace_settings: "Customize webspace settings"
     main_webspace: "Main webspace"
     additional_webspace: "Additional webspaces"
+
+    # Shadow functionality
     shadow_testimonial: "Shadow testimonial"
     enable_shadow_testimonial: "Enable shadow testimonial"
-    search_name: "Testimonials"
-    empty_testimoniallist: "Please choose testimonial..."
-    testimonial: "Testimonial"
-    testimonials: "Testimonials"
 
+    # Search integration
+    search_name: "Testimonials"
+
+    # Settings section
     config:
         tab: "Settings"
         title:
@@ -92,15 +116,19 @@ sulu_testimonials:
             toggle_hero: "Display Default Hero"
             toggle_breadcrumbs: "Display Breadcrumbs"
             page_testimonials: "Overview Testimonials"
+
+    # Search index names
     search:
         index:
             testimonials: "Testimonials (Draft)"
             testimonials_published: "Testimonials"
+
+# Activity bundle integration
 sulu_activity:
     resource:
-        testimonial: "Testimonial"
+        testimonials: "Testimonial"
     description:
-        testimonial:
+        testimonials:
             created: "{userFullName} created the testimonial \"{resourceTitle}\"."
             modified: "{userFullName} modified the testimonial \"{resourceTitle}\"."
             removed: "{userFullName} deleted the testimonial \"{resourceTitle}\"."

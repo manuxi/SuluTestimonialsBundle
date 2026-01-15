@@ -176,11 +176,11 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                         'adapter' => 'table',
                                         'list_key' => Testimonial::LIST_KEY,
                                         'display_properties' => [
-                                            'name',
+                                            'title',
                                         ],
-                                        'icon' => 'su-tag-pen',
+                                        'icon' => 'su-comment',
                                         'label' => 'sulu_testimonials.testimonials_selection_label',
-                                        'overlay_title' => 'sulu_testimonials.select_testimonial',
+                                        'overlay_title' => 'sulu_testimonials.select_testimonials',
                                     ],
                                 ],
                             ],
@@ -200,14 +200,14 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                         'adapter' => 'table',
                                         'list_key' => Testimonial::LIST_KEY,
                                         'display_properties' => [
-                                            'name',
+                                            'title',
                                         ],
-                                        'icon' => 'su-tag-pen',
+                                        'icon' => 'su-comment',
                                         'empty_text' => 'sulu_testimonials.no_testimonial_selected',
-                                        'overlay_title' => 'sulu_testimonials.select_testimonial',
+                                        'overlay_title' => 'sulu_testimonials.select_testimonials',
                                     ],
                                     'auto_complete' => [
-                                        'display_property' => 'name',
+                                        'display_property' => 'title',
                                         'search_properties' => [
                                             'name',
                                         ],

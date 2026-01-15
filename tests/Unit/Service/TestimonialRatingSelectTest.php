@@ -17,11 +17,15 @@ class TestimonialRatingSelectTest extends TestCase
     public function testValues(): void
     {
         $translator = $this->prophesize(TranslatorInterface::class);
-        // Mock all calls with Argument::any() just to ensure it returns string to avoid TypeError
-        $translator->trans(Argument::type('string'), [], 'admin')->willReturn('Translated');
 
-        // Also provide specific returns if strictly testing values
-        $translator->trans('sulu_testimonials.rates.0', [], 'admin')->willReturn('Bad');
+        $translator->trans(Argument::any(), Argument::cetera())
+            ->will(function ($args) {
+                if ($args[0] === 'sulu_testimonials.rates.default.0') {
+                    return 'Bad';
+                }
+
+                return 'Translated';
+            });
 
         $ratingSelect = new TestimonialRatingSelect($translator->reveal());
 
@@ -30,7 +34,7 @@ class TestimonialRatingSelectTest extends TestCase
         $this->assertCount(6, $values);
         $this->assertEquals('0', $values[0]['name']);
         $this->assertEquals('Bad', $values[0]['title']);
-        $this->assertEquals('Translated', $values[1]['title']); // Others will be 'Translated'
+        $this->assertEquals('Translated', $values[1]['title']);
     }
 
     public function testDefaultValue(): void
