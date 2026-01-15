@@ -57,7 +57,7 @@ class TestimonialsSitemapProviderTest extends TestCase
         $queryBuilder->setFirstResult(0)->willReturn($queryBuilder->reveal());
         $queryBuilder->setMaxResults(TestimonialsSitemapProvider::PAGE_SIZE)->willReturn($queryBuilder->reveal());
 
-        $query = $this->prophesize(AbstractQuery::class);
+        $query = $this->prophesize(\Doctrine\ORM\Query::class);
         $queryBuilder->getQuery()->willReturn($query->reveal());
 
         $now = new \DateTime();
@@ -84,7 +84,7 @@ class TestimonialsSitemapProviderTest extends TestCase
         $altQueryBuilder->andWhere(Argument::any())->willReturn($altQueryBuilder->reveal());
         $altQueryBuilder->select(Argument::any())->willReturn($altQueryBuilder->reveal());
 
-        $altQuery = $this->prophesize(AbstractQuery::class);
+        $altQuery = $this->prophesize(\Doctrine\ORM\Query::class);
         $altQueryBuilder->getQuery()->willReturn($altQuery->reveal());
 
         $altQuery->getResult()->willReturn([
@@ -121,7 +121,7 @@ class TestimonialsSitemapProviderTest extends TestCase
         $queryBuilder->setParameter(Argument::any(), Argument::any())->willReturn($queryBuilder->reveal());
         $queryBuilder->andWhere(Argument::any())->willReturn($queryBuilder->reveal());
 
-        $query = $this->prophesize(AbstractQuery::class);
+        $query = $this->prophesize(\Doctrine\ORM\Query::class);
         $queryBuilder->getQuery()->willReturn($query->reveal());
         $query->getSingleScalarResult()->willReturn(10); // 10 items, page size 10000 -> 1 page
 

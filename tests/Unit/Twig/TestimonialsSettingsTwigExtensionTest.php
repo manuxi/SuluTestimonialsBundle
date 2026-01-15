@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Tests\Unit\Twig;
 
+use Doctrine\ORM\EntityRepository;
 use Manuxi\SuluTestimonialsBundle\Entity\TestimonialsSettings;
 use Manuxi\SuluTestimonialsBundle\Twig\TestimonialsSettingsTwigExtension;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +19,7 @@ class TestimonialsSettingsTwigExtensionTest extends TestCase
     public function testLoadTestimonialsSettings(): void
     {
         $entityManager = $this->prophesize(EntityManagerInterface::class);
-        $repository = $this->prophesize(ObjectRepository::class);
+        $repository = $this->prophesize(EntityRepository::class);
 
         $settings = new TestimonialsSettings();
         $repository->findOneBy([])->willReturn($settings);

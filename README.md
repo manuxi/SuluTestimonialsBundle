@@ -12,21 +12,20 @@ This bundle contains
 - Link Provider
 - Sitemap Provider
 - Handler for Trash Items
-- Handler for Automation
 - Possibility to assign a contact as author
 - Twig Extension for resolving Testimonials / get a list of Testimonials
 - Events for displaying Activities
 - Search indexes
   - refresh whenever entity is changed
-  - distinct between normal and draft
-  and more...
+- and more...
 
 The testimonials are translatable.
 
 Please feel comfortable submitting feature requests. 
-This bundle is still in development. Use at own risk 🤞🏻
+Use at own risk 🤞🏻
 
-![image](https://github.com/user-attachments/assets/273d4912-8b50-4bd2-8c9b-bb53f338cb37)
+![img.png](docs/img/template.extended.en.png)
+
 
 ## 👩🏻‍🏭 Installation
 Install the package with:
