@@ -21,6 +21,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class TestimonialSmartContentProvider implements SmartContentProviderInterface
 {
+    /**
+     * @var class-string<TestimonialDimensionContent>
+     */
     private string $dimensionContentClassName;
     private ?TestimonialRepository $testimonialRepository = null;
 
@@ -30,7 +33,8 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
         private EntityManagerInterface $entityManager,
         private TranslatorInterface $translator,
     ) {
-        $this->dimensionContentClassName = TestimonialDimensionContent::class;
+        $entityDimensionContentRepository = $entityManager->getRepository(TestimonialDimensionContent::class);
+        $this->dimensionContentClassName = $entityDimensionContentRepository->getClassName();
     }
 
     private function getTestimonialRepository(): TestimonialRepository
@@ -56,10 +60,10 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
             ->enableLimit()
             ->enablePagination()
             ->enablePresentAs()
-            // ->enableTags()
-            // ->enableCategories()
+            ->enableTags()
+            ->enableCategories()
             ->enableSorting($this->getSorting())
-            ->enableView(TestimonialsAdmin::EDIT_FORM_VIEW, ['id' => 'id']);
+            ->enableView(TestimonialsAdmin::EDIT_TABS_VIEW, ['id' => 'id']);
     }
 
     protected function getSorting(): array
@@ -67,7 +71,9 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
         return [
             ['column' => 'title', 'title' => $this->translator->trans('sulu_testimonials.title', [], 'admin')],
             ['column' => 'rating', 'title' => $this->translator->trans('sulu_testimonials.rating', [], 'admin')],
-            ['column' => 'created', 'title' => $this->translator->trans('sulu_testimonials.created', [], 'admin')],
+            ['column' => 'workflowPublished', 'title' => $this->translator->trans('sulu_testimonials.published', [], 'admin')],
+            ['column' => 'created', 'title' => $this->translator->trans('sulu_testimonials.created_date', [], 'admin')],
+            ['column' => 'changed', 'title' => $this->translator->trans('sulu_testimonials.changed_date', [], 'admin')],
         ];
     }
 
@@ -135,23 +141,41 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
 
     protected function enhanceWithDimensionAttributes(array $filters): array
     {
-        return array_merge([
+        $dimensionAttributes = [
             'stage' => $filters['stage'] ?? DimensionContentInterface::STAGE_LIVE,
-        ], $filters);
+        ];
+
+        return \array_merge($dimensionAttributes, $filters);
     }
 
     protected function mapFilters(array $filters): array
     {
-        // Map SmartContent filters to QueryEnhancer expected filters
-        $mapped = [
+        $mappedFilters = [
+            'categoryIds' => $filters['categories'] ?? [],
+            'categoryOperator' => $filters['categoryOperator'] ?? 'OR',
+            'websiteCategories' => $filters['websiteCategories'] ?? [],
+            'websiteCategoryOperator' => $filters['websiteCategoryOperator'] ?? 'OR',
+            'tagNames' => $filters['tags'] ?? [],
+            'tagOperator' => $filters['tagOperator'] ?? 'OR',
+            'websiteTags' => $filters['websiteTags'] ?? [],
+            'websiteTagOperator' => $filters['websiteTagOperator'] ?? 'OR',
+            'templateKeys' => [],
             'locale' => $filters['locale'],
-            'stage' => $filters['stage'] ?? null,
-            'limit' => $filters['limit'] ?? null,
             'dataSource' => $filters['dataSource'] ?? null,
+            'limit' => $filters['limit'] ?? null,
+            'includeSubFolders' => $filters['includeSubFolders'] ?? false,
+            'excludeDuplicates' => $filters['excludeDuplicates'] ?? false,
         ];
-        if (isset($filters['offset']))
-            $mapped['offset'] = $filters['offset'];
-        return $mapped;
+
+        if (isset($filters['offset'])) {
+            $mappedFilters['offset'] = $filters['offset'];
+        }
+
+        if (isset($filters['stage'])) {
+            $mappedFilters['stage'] = $filters['stage'];
+        }
+
+        return $mappedFilters;
     }
 
     protected function addInternalFilters(QueryBuilder $queryBuilder, array $filters, string $alias): string

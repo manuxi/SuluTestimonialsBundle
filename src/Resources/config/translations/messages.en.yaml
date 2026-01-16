@@ -9,3 +9,6 @@ search:
     icon:
         testimonials: "su-comment"
         testimonials_published: "su-comment"
+error:
+    list:
+        testimonials: "We can't find any testimonials that we can show you at the moment."

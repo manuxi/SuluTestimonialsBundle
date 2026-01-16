@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Entity;
 
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
 use Sulu\Content\Domain\Model\ContentRichEntityInterface;
 use Sulu\Content\Domain\Model\ContentRichEntityTrait;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 
-#[ORM\Entity(repositoryClass: TestimonialRepository::class)]
-#[ORM\Table(name: 'app_testimonial')]
+/**
+ * Testimonial entity.
+ *
+ * ORM mapping is defined in Resources/config/doctrine/Testimonial.orm.xml
+ */
 class Testimonial implements ContentRichEntityInterface
 {
     /**
@@ -27,9 +28,6 @@ class Testimonial implements ContentRichEntityInterface
     public const SECURITY_CONTEXT = 'sulu.testimonials.testimonials';
     public const TEMPLATE_TYPE = 'testimonial';
 
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
     public function __construct()

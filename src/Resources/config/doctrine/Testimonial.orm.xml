@@ -4,7 +4,7 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                                       http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
-    <entity name="Manuxi\SuluTestimonialsBundle\Entity\Testimonial" table="app_testimonials_testimonial">
+    <entity name="Manuxi\SuluTestimonialsBundle\Entity\Testimonial" table="app_testimonial">
         <id name="id" type="integer">
             <generator strategy="AUTO"/>
         </id>

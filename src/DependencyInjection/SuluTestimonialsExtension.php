@@ -85,7 +85,7 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                             ],
                         ],
                     ],
-                ]
+                ],
             );
         }
 
@@ -174,11 +174,11 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
-                                        'list_key' => Testimonial::LIST_KEY,
+                                        'list_key' => Testimonial::LIST_KEY_PUBLISHED,
                                         'display_properties' => [
                                             'title',
                                         ],
-                                        'icon' => 'su-comment',
+                                        'icon' => 'su-filter',
                                         'label' => 'sulu_testimonials.testimonials_selection_label',
                                         'overlay_title' => 'sulu_testimonials.select_testimonials',
                                     ],
@@ -198,11 +198,11 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
                                 'types' => [
                                     'list_overlay' => [
                                         'adapter' => 'table',
-                                        'list_key' => Testimonial::LIST_KEY,
+                                        'list_key' => Testimonial::LIST_KEY_PUBLISHED,
                                         'display_properties' => [
                                             'title',
                                         ],
-                                        'icon' => 'su-comment',
+                                        'icon' => 'su-filter',
                                         'empty_text' => 'sulu_testimonials.no_testimonial_selected',
                                         'overlay_title' => 'sulu_testimonials.select_testimonials',
                                     ],

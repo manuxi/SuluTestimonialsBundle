@@ -53,15 +53,15 @@ services:
         tags:
             - { name: doctrine.repository_service }
 
-    sulu_testimonials.testimonials_data_provider:
+    sulu_testimonials.testimonials_smart_content_provider:
         class: Manuxi\SuluTestimonialsBundle\Content\TestimonialSmartContentProvider
         arguments:
-            - '@sulu_content.query_enhancer'
+            - '@sulu_content.dimension_content_query_enhancer'
             - '@sulu_admin.smart_content_query_enhancer'
             - '@doctrine.orm.entity_manager'
             - '@translator.default'
         tags:
-            - { name: sulu.smart_content.data_provider, alias: testimonials }
+            - { name: sulu_content.smart_content_provider, type: testimonials }
 
     # Data Mapper
     Manuxi\SuluTestimonialsBundle\Content\DataMapper\TestimonialDataMapper:
@@ -88,20 +88,20 @@ services:
     sulu_testimonials.property_resolver.single_testimonial_selection:
         class: Manuxi\SuluTestimonialsBundle\Content\PropertyResolver\SingleTestimonialSelectionPropertyResolver
         tags:
-            - { name: sulu_content.property_resolver }
+            - { name: sulu_content.property_resolver, alias: 'single_testimonial_selection' }
 
-    sulu_testimonials.property_resolver.event_selection:
+    sulu_testimonials.property_resolver.testimonial_selection:
         class: Manuxi\SuluTestimonialsBundle\Content\PropertyResolver\TestimonialSelectionPropertyResolver
         tags:
-            - { name: sulu_content.property_resolver }
+            - { name: sulu_content.property_resolver, alias: 'testimonial_selection' }
 
     # Resource Loader
-    sulu_testimonials.resource_loader.event:
+    sulu_testimonials.resource_loader.testimonial:
         class: Manuxi\SuluTestimonialsBundle\Content\ResourceLoader\TestimonialResourceLoader
         arguments:
             - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
         tags:
-            - { name: sulu_content.resource_loader }
+            - { name: sulu_content.resource_loader, alias: 'testimonial' }
 
     # MODELS
     sulu_testimonials.object_provider:
@@ -159,6 +159,42 @@ services:
             - '@translator.default'
         tags:
             - { name: sulu.link.provider, alias: testimonial }
+
+    # Search Providers
+    sulu_testimonials.search.admin_provider:
+        class: Manuxi\SuluTestimonialsBundle\Search\TestimonialAdminSearchProvider
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@sulu_core.webspace.webspace_manager'
+            - '@sulu_content.content_aggregator'
+        tags:
+            - { name: cmsig_seal.reindex_provider }
+
+    sulu_testimonials.search.website_provider:
+        class: Manuxi\SuluTestimonialsBundle\Search\TestimonialWebsiteSearchProvider
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@sulu_core.webspace.webspace_manager'
+            - '@sulu_content.content_aggregator'
+        tags:
+            - { name: cmsig_seal.reindex_provider }
+
+    sulu_testimonials.search.listener:
+        class: Manuxi\SuluTestimonialsBundle\Search\TestimonialSearchListener
+        arguments:
+            - '@cmsig_seal.engine.default'
+            - '@sulu_core.webspace.webspace_manager'
+            - '@sulu_content.content_aggregator'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    # Testimonial Mapper
+    sulu_testimonials.testimonial_mapper:
+        class: Manuxi\SuluTestimonialsBundle\Application\Mapper\TestimonialMapper
+        arguments:
+            - '@sulu_content.content_manager'
+        tags:
+            - { name: sulu_testimonials.testimonial_mapper }
 
     # Trash
     sulu_testimonials.testimonials_trash_item_handler:

@@ -1,15 +1,17 @@
 <?php
 
-namespace Manuxi\SuluTestimonialsBundle\Entity;
+declare(strict_types=1);
 
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
+namespace Manuxi\SuluTestimonialsBundle\Entity;
 
 use Sulu\Component\Persistence\Model\AuditableInterface;
 use Sulu\Component\Persistence\Model\AuditableTrait;
 
-#[ORM\Entity()]
-#[ORM\Table(name: 'app_testimonials_settings')]
+/**
+ * TestimonialsSettings entity.
+ *
+ * ORM mapping is defined in Resources/config/doctrine/TestimonialsSettings.orm.xml
+ */
 class TestimonialsSettings implements AuditableInterface
 {
     use AuditableTrait;
@@ -18,21 +20,14 @@ class TestimonialsSettings implements AuditableInterface
     public const FORM_KEY = 'testimonials_config';
     public const SECURITY_CONTEXT = 'sulu.testimonials.settings';
 
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::BOOLEAN, nullable: true)]
     private ?bool $toggleHeader = null;
 
-    #[ORM\Column(type: Types::BOOLEAN, nullable: true)]
     private ?bool $toggleHero = null;
 
-    #[ORM\Column(type: Types::BOOLEAN, nullable: true)]
     private ?bool $toggleBreadcrumbs = null;
 
-    #[ORM\Column(type: Types::STRING, nullable: true)]
     private ?string $pageTestimonials = null;
 
     public function __construct()

@@ -63,7 +63,12 @@
             <field-name>rating</field-name>
             <entity-name>dimensionContent</entity-name>
             <joins ref="dimensionContent"/>
-            <!-- <transformer type="star_rating"/> -->
+            <!-- <transformer type="star_rating">
+                <params>
+                    <param name="max_value" value="10"/>
+                    <param name="show_value" value="true"/>
+                </params>
+            </transformer> -->
         </property>
 
         <property name="publishedAt" visibility="yes" translation="sulu_testimonials.published_date" type="datetime">

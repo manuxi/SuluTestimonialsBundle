@@ -29,6 +29,7 @@ sulu_testimonials:
     show_date: "Show Date"
 
     # Creator and change information
+    created: "Created"
     created_date: "Created at"
     creator: "Created by"
     changed_date: "Last Change at"

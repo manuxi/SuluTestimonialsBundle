@@ -5,7 +5,7 @@
                   http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
     <entity name="Manuxi\SuluTestimonialsBundle\Entity\TestimonialsSettings"
-            table="app_testimonials_settings">
+            table="app_testimonial_settings">
 
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO"/>

@@ -63,6 +63,42 @@ class TestimonialRepository extends ServiceEntityRepository
         );
 
         return $qb->getQuery()->getResult();
+
+        /*
+        $qb = $this->createQueryBuilder('testimonial')
+            ->leftJoin('testimonial.dimensionContents', 'dimensionContent')
+            ->where('testimonial.id IN (:ids)')
+            ->setParameter('ids', $ids);
+
+        $dimensionAttributes = ['locale' => $locale, 'stage' => $stage];
+
+        $this->dimensionContentQueryEnhancer->addFilters(
+            $qb,
+            'testimonial',
+            TestimonialDimensionContent::class,
+            $dimensionAttributes,
+            []
+        );
+
+        $this->dimensionContentQueryEnhancer->addSelects(
+            $qb,
+            TestimonialDimensionContent::class,
+            $dimensionAttributes,
+            [DimensionContentQueryEnhancer::GROUP_SELECT_CONTENT_WEBSITE => true]
+        );
+
+        return $qb->getQuery()->getResult();
+        **/
+
+    }
+
+    public function findAll(): array
+    {
+        $queryBuilder = $this->createQueryBuilder('testimonial')
+            ->leftJoin('testimonial.dimensionContents', 'dimensionContent')
+            ->addSelect('dimensionContent');
+
+        return $queryBuilder->getQuery()->getResult();
     }
 
     public function findAllByLocale(string $locale, string $stage = DimensionContentInterface::STAGE_LIVE): array
@@ -167,6 +203,30 @@ class TestimonialRepository extends ServiceEntityRepository
         return (int) $queryBuilder->getQuery()->getSingleScalarResult();
     }
 
+    public function countAll(): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countPublished(string $locale): int
+    {
+        $qb = $this->createQueryBuilder('testimonial');
+
+        $qb->select('COUNT(DISTINCT testimonial.id)')
+            ->leftJoin('testimonial.dimensionContents', 'dc')
+            ->where('dc.locale = :locale')
+            ->andWhere('dc.stage = :stage')
+            ->andWhere('dc.workflowPlace = :published')
+            ->setParameter('locale', $locale)
+            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
+            ->setParameter('published', WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
     private function buildQueryBuilder(
         array $filters = [],
         array $sortBys = [],
@@ -239,12 +299,6 @@ class TestimonialRepository extends ServiceEntityRepository
             $queryBuilder->andWhere('dimensionContent.workflowPlace = :published')
                 ->setParameter('published', WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
         }
-        // Add more filters (categories, tags) if QueryEnhancer doesn't handle them fully via selects?
-        // QueryEnhancer usually handles selects, but filters?
-        // SuluEventBundle handles filters explicitly (e.g. date ranges).
-        // For tags/categories, DimensionContentQueryEnhancer can help if we use correct join aliases?
-        // Usually, filter 'tags' comes from SmartContent.
-        // We should handle them if we want filtering by tags.
     }
 
     private function applySortBys(QueryBuilder $queryBuilder, array $sortBys): void

@@ -9,3 +9,6 @@ search:
     icon:
         testimonials: "su-comment"
         testimonials_published: "su-comment"
+error:
+    list:
+        testimonials: "Es existieren momentan keine Testimonials, die wir anzeigen können."
