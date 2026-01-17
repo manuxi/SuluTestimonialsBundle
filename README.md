@@ -1,85 +1,111 @@
-# SuluTestimonialsBundle!
+# SuluTestimonialsBundle
+
 ![php workflow](https://github.com/manuxi/SuluTestimonialsBundle/actions/workflows/php.yml/badge.svg)
 ![symfony workflow](https://github.com/manuxi/SuluTestimonialsBundle/actions/workflows/symfony.yml/badge.svg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/manuxi/SuluTestimonialsBundle/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/manuxi/SuluTestimonialsBundle/blob/main/LICENSE)
 ![GitHub Tag](https://img.shields.io/github/v/tag/manuxi/SuluTestimonialsBundle)
-![Supports Sulu 2.6 or later](https://img.shields.io/badge/%20Sulu->=2.6-0088cc?color=00b2df)
+![Supports Sulu 3.0 or later](https://img.shields.io/badge/Sulu->=3.0-0088cc?color=00b2df)
 
-I made this bundle to have the possibility to manage testimonials in my projects.
+**English** | [Deutsch](README.de.md)
 
-This bundle contains
-- Several filters for Testimonials Content Type
-- Link Provider
-- Sitemap Provider
-- Handler for Trash Items
-- Possibility to assign a contact as author
-- Twig Extension for resolving Testimonials / get a list of Testimonials
-- Events for displaying Activities
-- Search indexes
-  - refresh whenever entity is changed
-- and more...
+A Sulu CMS bundle for managing customer testimonials, reviews, and quotes with configurable star ratings.
 
-The testimonials are translatable.
+![Admin View](docs/img/template.extended.en.png)
 
-Please feel comfortable submitting feature requests. 
-Use at own risk 🤞🏻
+## ✨ Features
 
-![img.png](docs/img/template.extended.en.png)
+- **Testimonial Management** - Create, edit, and publish customer testimonials
+- **Star Rating System** - Configurable 5 or 10 point rating scale with star symbols
+- **Contact Integration** - Link testimonials to Sulu contacts
+- **Smart Content Provider** - Use testimonials in any Sulu page via Smart Content
+- **Selection Content Types** - Single and multiple testimonial selection
+- **Workflow Support** - Draft/Published workflow with versioning
+- **Multi-language** - Full translation support
+- **SEO & Sitemap** - Built-in SEO and sitemap integration
+- **Search Integration** - Admin and website search indexes
+- **Trash Support** - Restore deleted testimonials
+- **Activity Logging** - Track all changes
 
+## 📋 Requirements
+
+- PHP 8.2+
+- Sulu CMS 3.0+
+- Symfony 6.4+ / 7.0+
 
 ## 👩🏻‍🏭 Installation
-Install the package with:
-```console
+
+### Step 1: Install via Composer
+
+```bash
 composer require manuxi/sulu-testimonials-bundle
 ```
-If you're *not* using Symfony Flex, you'll also
-need to add the bundle in your `config/bundles.php` file:
+
+### Step 2: Register the Bundle
+
+If not using Symfony Flex, add to `config/bundles.php`:
 
 ```php
 return [
-    //...
+    // ...
     Manuxi\SuluTestimonialsBundle\SuluTestimonialsBundle::class => ['all' => true],
 ];
 ```
-Please add the following to your `routes_admin.yaml`:
+
+### Step 3: Configure Routes
+
+Add to `config/routes/sulu_admin.yaml`:
+
 ```yaml
 SuluTestimonialsBundle:
     resource: '@SuluTestimonialsBundle/Resources/config/routes_admin.yaml'
 ```
-Don't forget fo add the index to your sulu_search.yaml:
 
-add "testimonials"!
+### Step 4: Update Database
 
-"testimonials" is the index of published, "testimonials_draft" the index of unpublished elements.
-```yaml
-sulu_search:
-    website:
-        indexes:
-            - testimonials
-            - ...
-``` 
-
-Last but not least the schema of the database needs to be updated.  
-
-Some tables will be created (prefixed with app_):  
-testimonials, testimonials_translation.  
-
-See the needed queries with
-```
+```bash
+# Preview changes
 php bin/console doctrine:schema:update --dump-sql
-```  
-Update the schema by executing 
-```
-php bin/console doctrine:schema:update --force
-```  
 
-Make sure you only process the bundles schema updates!
+# Apply changes
+php bin/console doctrine:schema:update --force
+```
+
+### Step 5: Build Admin Assets
+
+```bash
+cd assets/admin
+npm install
+npm run build
+```
+
+### Step 6: Grant Permissions
+
+1. Go to **Settings → User Roles** in Sulu Admin
+2. Select the appropriate role
+3. Enable permissions for **Testimonials**
+4. Save and reload
+
+## 🧶 Configuration
+
+Create `config/packages/sulu_testimonials.yaml`:
+
+```yaml
+sulu_testimonials:
+    rating:
+        max_value: 5            # 5 or 10 point scale
+        default_value: 3        # Default rating for new testimonials
+        use_star_symbols: true  # Show stars in admin dropdown
+        use_star_widget: false  # Use interactive star widget (future)
+```
+
+See [Configuration Documentation](docs/configuration.en.md) for all options.
 
 ## 🎣 Usage
-First: Grant permissions for testimonials. 
-After reload you should see the testimonials item in the navigation. 
-Start to create testimonials.
-Use smart_content property type to show a list of testimonials, e.g.:
+
+### Smart Content
+
+Use testimonials in any page template:
+
 ```xml
 <property name="testimonials" type="smart_content">
     <meta>
@@ -93,20 +119,69 @@ Use smart_content property type to show a list of testimonials, e.g.:
     </params>
 </property>
 ```
-Example of the corresponding twig template for the testimonials list:
-```html
+
+### Selection Types
+
+Single testimonial:
+
+```xml
+<property name="featured_testimonial" type="single_testimonial_selection">
+    <meta>
+        <title lang="en">Featured Testimonial</title>
+    </meta>
+</property>
+```
+
+Multiple testimonials:
+
+```xml
+<property name="testimonials" type="testimonial_selection">
+    <meta>
+        <title lang="en">Testimonials</title>
+    </meta>
+</property>
+```
+
+### Twig Template
+
+```twig
 {% for testimonial in testimonials %}
-    <div class="col">
-        <h2>
-            {{ testimonial.contact.fullname }}
-        </h2>
-        <p>
-            {{ testimonial.text|raw }}
-        </p>
+    <div class="testimonial">
+        <blockquote>{{ testimonial.text|raw }}</blockquote>
+        
+        {% if testimonial.contact %}
+            <cite>{{ testimonial.contact.fullName }}</cite>
+        {% endif %}
+        
+        {# Rating display - uses global variable #}
+        {% if testimonial.rating >= 0 %}
+            {% set maxRating = testimonials_rating_max_value %}
+            <div class="rating">
+                {{ testimonial.rating }}/{{ maxRating }}
+            </div>
+        {% endif %}
     </div>
 {% endfor %}
 ```
 
+## 📖 Documentation
+
+- [Installation](docs/installation.en.md)
+- [Configuration](docs/configuration.en.md)
+- [Usage & Templates](docs/usage.en.md)
+- [Rating System](docs/rating.en.md)
+- [Admin List Customization](docs/admin-list.en.md)
+
+## 🔌 Optional Integrations
+
+### Star Rating in Admin Lists
+
+If you have [SuluTweaksBundle](https://github.com/manuxi/SuluTweaksBundle) installed, you can enable star rating display in admin lists. See [Admin List Documentation](docs/admin-list.en.md).
+
 ## 👩‍🍳 Contributing
-For the sake of simplicity this extension was kept small.
-Please feel comfortable submitting issues or pull requests. As always I'd be glad to get your feedback to improve the extension :).
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## 📄 License
+
+This bundle is released under the [MIT License](LICENSE).
