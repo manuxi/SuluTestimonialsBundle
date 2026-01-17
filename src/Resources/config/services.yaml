@@ -215,6 +215,7 @@ services:
         class: Manuxi\SuluTestimonialsBundle\Twig\TestimonialsTwigExtension
         arguments:
             - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '%sulu_testimonials.rating.max_value%'
         tags:
             - { name: twig.extension }
 

@@ -7,22 +7,29 @@ namespace Manuxi\SuluTestimonialsBundle\Twig;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
 use Twig\Extension\AbstractExtension;
+use Twig\Extension\GlobalsInterface;
 use Twig\TwigFunction;
 
-class TestimonialsTwigExtension extends AbstractExtension
+class TestimonialsTwigExtension extends AbstractExtension implements GlobalsInterface
 {
-    private TestimonialRepository $testimonialRepository;
-
-    public function __construct(TestimonialRepository $testimonialRepository)
-    {
-        $this->testimonialRepository = $testimonialRepository;
+    public function __construct(
+        private TestimonialRepository $testimonialRepository,
+        private int $ratingMaxValue = 5,
+    ) {
     }
 
-    public function getFunctions()
+    public function getGlobals(): array
+    {
+        return [
+            'testimonials_rating_max_value' => $this->ratingMaxValue,
+        ];
+    }
+
+    public function getFunctions(): array
     {
         return [
             new TwigFunction('sulu_resolve_testimonial', [$this, 'resolveTestimonial']),
-            new TwigFunction('sulu_get_testimonials', [$this, 'getTestimonials'])
+            new TwigFunction('sulu_get_testimonials', [$this, 'getTestimonials']),
         ];
     }
 
@@ -33,7 +40,7 @@ class TestimonialsTwigExtension extends AbstractExtension
         return $testimonial ?? null;
     }
 
-    public function getTestimonials(int $limit = 100, $locale = 'en')
+    public function getTestimonials(int $limit = 100, string $locale = 'en'): array
     {
         return $this->testimonialRepository->findByFilters([], 0, $limit, $limit, $locale);
     }

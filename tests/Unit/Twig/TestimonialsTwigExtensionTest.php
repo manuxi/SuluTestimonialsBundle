@@ -10,6 +10,7 @@ use Manuxi\SuluTestimonialsBundle\Twig\TestimonialsTwigExtension;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
+use Twig\Extension\GlobalsInterface;
 use Twig\TwigFunction;
 
 class TestimonialsTwigExtensionTest extends TestCase
@@ -22,7 +23,34 @@ class TestimonialsTwigExtensionTest extends TestCase
     protected function setUp(): void
     {
         $this->testimonialRepository = $this->prophesize(TestimonialRepository::class);
-        $this->extension = new TestimonialsTwigExtension($this->testimonialRepository->reveal());
+        $this->extension = new TestimonialsTwigExtension(
+            $this->testimonialRepository->reveal(),
+            10
+        );
+    }
+
+    public function testImplementsGlobalsInterface(): void
+    {
+        $this->assertInstanceOf(GlobalsInterface::class, $this->extension);
+    }
+
+    public function testGetGlobals(): void
+    {
+        $globals = $this->extension->getGlobals();
+
+        $this->assertArrayHasKey('testimonials_rating_max_value', $globals);
+        $this->assertEquals(10, $globals['testimonials_rating_max_value']);
+    }
+
+    public function testGetGlobalsWithDefaultValue(): void
+    {
+        $extensionWithDefault = new TestimonialsTwigExtension(
+            $this->testimonialRepository->reveal()
+        );
+
+        $globals = $extensionWithDefault->getGlobals();
+
+        $this->assertEquals(5, $globals['testimonials_rating_max_value']);
     }
 
     public function testGetFunctions(): void
