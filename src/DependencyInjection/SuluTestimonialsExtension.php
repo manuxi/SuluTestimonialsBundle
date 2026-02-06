@@ -41,6 +41,24 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
 
     public function prepend(ContainerBuilder $container): void
     {
+        if ($container->hasExtension('doctrine')) {
+            $container->prependExtensionConfig(
+                'doctrine',
+                [
+                    'orm' => [
+                        'mappings' => [
+                            'SuluTestimonialsBundle' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../Resources/config/doctrine',
+                                'prefix' => 'Manuxi\SuluTestimonialsBundle\Entity',
+                                'alias' => 'SuluTestimonialsBundle',
+                            ],
+                        ],
+                    ],
+                ]
+            );
+        }
+
         // Load bundle default configuration if project hasn't defined rating config
         if ($container->hasExtension('sulu_testimonials')) {
             $configs = $container->getExtensionConfig('sulu_testimonials');

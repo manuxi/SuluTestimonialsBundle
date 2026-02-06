@@ -7,7 +7,7 @@
             <entity-name>dimensionContent</entity-name>
             <field-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial.dimensionContents</field-name>
             <method>INNER</method>
-            <condition>dimensionContent.locale = :locale AND dimensionContent.stage = 'draft' AND dimensionContent.version > 0 AND Manuxi\SuluTestimonialsBundle\Entity\Testimonial.id = :id</condition>
+            <condition>dimensionContent.locale = :locale AND dimensionContent.stage = 'draft' AND dimensionContent.version > 0 AND Manuxi\SuluTestimonialsBundle\Entity\Testimonial.uuid = :id</condition>
         </join>
     </joins>
 
@@ -32,7 +32,7 @@
 
     <properties>
         <property name="id" translation="sulu_admin.id" visibility="never">
-            <field-name>id</field-name>
+            <field-name>uuid</field-name>
             <entity-name>Manuxi\SuluTestimonialsBundle\Entity\Testimonial</entity-name>
         </property>
 

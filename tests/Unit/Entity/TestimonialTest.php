@@ -23,7 +23,8 @@ class TestimonialTest extends TestCase
 
     public function testGetIdDefault(): void
     {
-        $this->assertNull($this->testimonial->getId());
+        $this->assertNotNull($this->testimonial->getId());
+        $this->assertIsString($this->testimonial->getId());
     }
 
     public function testAddRemoveDimensionContent(): void

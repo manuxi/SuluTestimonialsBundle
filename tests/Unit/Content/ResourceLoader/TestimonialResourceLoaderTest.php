@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Tests\Unit\Content\ResourceLoader;
@@ -19,14 +18,10 @@ class TestimonialResourceLoaderTest extends TestCase
     {
         $repository = $this->prophesize(TestimonialRepository::class);
         $loader = new TestimonialResourceLoader($repository->reveal());
-
         $testimonial = $this->prophesize(Testimonial::class);
-        $testimonial->getId()->willReturn(123);
-
-        $repository->findByIds([123], 'en', DimensionContentInterface::STAGE_LIVE)->willReturn([$testimonial->reveal()]);
-
+        $testimonial->getId()->willReturn('123');
+        $repository->findByUuids(['123'], 'en', DimensionContentInterface::STAGE_LIVE)->willReturn([$testimonial->reveal()]);
         $result = $loader->load(['123'], 'en');
-
         $this->assertCount(1, $result);
         $this->assertArrayHasKey('123', $result);
         $this->assertSame($testimonial->reveal(), $result['123']);

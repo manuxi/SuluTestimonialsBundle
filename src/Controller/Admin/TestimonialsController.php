@@ -83,10 +83,10 @@ class TestimonialsController extends AbstractRestController
         defaults: ['_format' => 'json'],
         methods: ['GET']
     )]
-    public function getAction(Request $request, int $id): Response
+    public function getAction(Request $request, string $id): Response
     {
         /** @var Testimonial|null $testimonial */
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById($id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();
@@ -142,10 +142,10 @@ class TestimonialsController extends AbstractRestController
         defaults: ['_format' => 'json'],
         methods: ['POST']
     )]
-    public function postTriggerAction(int $id, Request $request): Response
+    public function postTriggerAction(string $id, Request $request): Response
     {
         /** @var Testimonial|null $testimonial */
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById($id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();
@@ -235,10 +235,10 @@ class TestimonialsController extends AbstractRestController
         defaults: ['_format' => 'json'],
         methods: ['PUT']
     )]
-    public function putAction(Request $request, int $id): Response
+    public function putAction(Request $request, string $id): Response
     {
         /** @var Testimonial|null $testimonial */
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById($id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();
@@ -283,10 +283,10 @@ class TestimonialsController extends AbstractRestController
         defaults: ['_format' => 'json'],
         methods: ['DELETE']
     )]
-    public function deleteAction(Request $request, int $id): Response
+    public function deleteAction(Request $request, string $id): Response
     {
         /** @var Testimonial $testimonial */
-        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById((int) $id);
+        $testimonial = $this->entityManager->getRepository(Testimonial::class)->findById($id);
 
         if (!$testimonial) {
             throw new NotFoundHttpException();

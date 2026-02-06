@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<doctrine-mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                                       http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
-
-    <entity name="Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent" table="app_testimonial_dimension_content">
+    <entity name="Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent"
+            table="app_testimonial_dimension_content">
         <id name="id" type="integer">
             <generator strategy="AUTO"/>
         </id>
-
         <field name="title" type="string" nullable="true"/>
         <field name="text" type="text" nullable="true"/>
         <field name="rating" type="string" nullable="true"/>
@@ -18,19 +17,16 @@
         <field name="showDate" type="boolean" nullable="true"/>
         <field name="date" type="datetime_immutable" nullable="true"/>
         <field name="website" type="text" nullable="true"/>
-
-        <many-to-one field="testimonial" target-entity="Manuxi\SuluTestimonialsBundle\Entity\Testimonial" inversed-by="dimensionContents">
-            <join-column name="testimonial_id" nullable="false" on-delete="CASCADE"/>
+        <many-to-one field="testimonial" target-entity="Manuxi\SuluTestimonialsBundle\Entity\Testimonial"
+                     inversed-by="dimensionContents">
+            <join-column name="testimonial_id" referenced-column-name="uuid" nullable="false" on-delete="CASCADE"/>
         </many-to-one>
-
         <many-to-one field="image" target-entity="Sulu\Bundle\MediaBundle\Entity\Media">
             <join-column name="image_id" referenced-column-name="id" nullable="true" on-delete="SET NULL"/>
         </many-to-one>
-
         <many-to-one field="contact" target-entity="Sulu\Bundle\ContactBundle\Entity\ContactInterface">
             <join-column name="contact_id" referenced-column-name="id" nullable="true" on-delete="SET NULL"/>
         </many-to-one>
-
         <!-- Traits -->
         <!-- DimensionContentTrait -->
         <field name="locale" type="string" length="5" nullable="true"/>
@@ -42,11 +38,9 @@
         </field>
         <field name="ghostLocale" type="string" length="5" nullable="true" column="ghost_locale"/>
         <field name="availableLocales" type="json" nullable="true" column="available_locales"/>
-
         <!-- WorkflowTrait -->
         <field name="workflowPlace" type="string" length="32" nullable="true" column="workflowPlace"/>
         <field name="workflowPublished" type="datetime_immutable" nullable="true" column="workflowPublished"/>
-
         <!-- ExcerptTrait -->
         <many-to-many field="excerptCategories" target-entity="Sulu\Bundle\CategoryBundle\Entity\CategoryInterface">
             <join-table name="app_testimonial_excerpt_categories">
@@ -58,7 +52,6 @@
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
-
         <many-to-many field="excerptTags" target-entity="Sulu\Bundle\TagBundle\Tag\TagInterface">
             <join-table name="app_testimonial_excerpt_tags">
                 <join-columns>
@@ -69,44 +62,33 @@
                 </inverse-join-columns>
             </join-table>
         </many-to-many>
-
         <field name="excerptData" type="json" nullable="true" column="excerpt_data"/>
-
         <!-- SeoTrait -->
         <field name="seoData" type="json" nullable="true" column="seo_data"/>
         <field name="seoNoIndex" type="boolean" nullable="true"/>
         <field name="seoNoFollow" type="boolean" nullable="true"/>
         <field name="seoHideInSitemap" type="boolean" nullable="true"/>
-
         <!-- AuthorTrait -->
         <field name="created" type="datetime_immutable" nullable="false"/>
         <field name="changed" type="datetime_immutable" nullable="false"/>
-
         <many-to-one field="creator" target-entity="Sulu\Bundle\SecurityBundle\Entity\User">
             <join-column name="idUsersCreator" referenced-column-name="id" nullable="true" on-delete="SET NULL"/>
         </many-to-one>
-
         <many-to-one field="changer" target-entity="Sulu\Bundle\SecurityBundle\Entity\User">
             <join-column name="idUsersChanger" referenced-column-name="id" nullable="true" on-delete="SET NULL"/>
         </many-to-one>
-
         <many-to-one field="author" target-entity="Sulu\Bundle\ContactBundle\Entity\ContactInterface">
             <join-column name="author_id" referenced-column-name="id" nullable="true" on-delete="SET NULL"/>
         </many-to-one>
-
         <field name="authored" type="datetime_immutable" nullable="true"/>
-
         <many-to-one field="route" target-entity="Sulu\Route\Domain\Model\Route">
             <join-columns>
                 <join-column name="route_id" referenced-column-name="id" on-delete="SET NULL" nullable="true"/>
             </join-columns>
         </many-to-one>
-
         <!-- WebspaceTrait -->
         <field name="mainWebspace" type="string" nullable="true"/>
-
         <!-- ShadowTrait -->
         <field name="shadowLocale" type="string" length="5" nullable="true" column="shadow_locale"/>
-
     </entity>
 </doctrine-mapping>

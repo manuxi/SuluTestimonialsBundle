@@ -29,14 +29,14 @@ class TestimonialResourceLoader implements ResourceLoaderInterface
             return [];
         }
 
-        $intIds = \array_map('intval', $ids);
+
 
         $stage = $params['stage'] ?? DimensionContentInterface::STAGE_LIVE;
-        $result = $this->testimonialRepository->findByIds($intIds, $locale, $stage);
+        $result = $this->testimonialRepository->findByUuids($ids, $locale, $stage);
 
         $mappedResult = [];
         foreach ($result as $event) {
-            $mappedResult[(string) $event->getId()] = $event;
+            $mappedResult[$event->getId()] = $event;
         }
 
         return $mappedResult;

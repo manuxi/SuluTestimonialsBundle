@@ -9,10 +9,10 @@ use Sulu\Bundle\ActivityBundle\Domain\Event\DomainEvent;
 
 class TestimonialRemovedEvent extends DomainEvent
 {
-    private int $id;
+    private string $id;
     private string $title = '';
 
-    public function __construct(int $id, string $title)
+    public function __construct(string $id, string $title)
     {
         parent::__construct();
         $this->id = $id;
@@ -31,7 +31,7 @@ class TestimonialRemovedEvent extends DomainEvent
 
     public function getResourceId(): string
     {
-        return (string)$this->id;
+        return $this->id;
     }
 
     public function getResourceTitle(): ?string

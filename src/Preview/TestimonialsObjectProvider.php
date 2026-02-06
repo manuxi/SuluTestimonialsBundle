@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Preview;
@@ -10,23 +9,23 @@ use Sulu\Bundle\PreviewBundle\Preview\PreviewContext;
 use Sulu\Bundle\PreviewBundle\Preview\Provider\PreviewDefaultsProviderInterface;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
+use function array_key_exists;
 
 class TestimonialsObjectProvider implements PreviewDefaultsProviderInterface
 {
     public function __construct(
-        private readonly TestimonialRepository $testimonialRepository,
+        private readonly TestimonialRepository      $testimonialRepository,
         private readonly ContentAggregatorInterface $contentAggregator,
-    ) {
+    )
+    {
     }
 
     public function getDefaults(PreviewContext $previewContext): array
     {
-        $testimonial = $this->testimonialRepository->findById((int) $previewContext->getId());
-
+        $testimonial = $this->testimonialRepository->findById($previewContext->getId());
         if (!$testimonial) {
             return [];
         }
-
         // Resolve the DimensionContent for the requested locale
         $dimensionContent = $this->contentAggregator->aggregate(
             $testimonial,
@@ -35,11 +34,9 @@ class TestimonialsObjectProvider implements PreviewDefaultsProviderInterface
                 'stage' => DimensionContentInterface::STAGE_DRAFT,
             ]
         );
-
         if (!$dimensionContent) {
             return [];
         }
-
         return [
             '_controller' => 'Manuxi\SuluTestimonialsBundle\Controller\Website\TestimonialsController::indexAction',
             'testimonial' => $testimonial,
@@ -51,7 +48,6 @@ class TestimonialsObjectProvider implements PreviewDefaultsProviderInterface
     {
         // Update dimension content with preview data
         $dimensionContent = $defaults['dimensionContent'] ?? null;
-
         if ($dimensionContent) {
             if (isset($data['title'])) {
                 $dimensionContent->setTitle($data['title']);
@@ -67,19 +63,16 @@ class TestimonialsObjectProvider implements PreviewDefaultsProviderInterface
             }
             // Add other fields from TestimonialDimensionContent here as needed
         }
-
         return $defaults;
     }
 
     public function updateContext(PreviewContext $previewContext, array $defaults, array $context): array
     {
         $dimensionContent = $defaults['dimensionContent'] ?? null;
-
-        if ($dimensionContent && \array_key_exists('template', $context)) {
+        if ($dimensionContent && array_key_exists('template', $context)) {
             // Testimonials might not use templates in the same way as Pages/Events, but if they do:
             // $dimensionContent->setTemplateKey($context['template']);
         }
-
         return $defaults;
     }
 

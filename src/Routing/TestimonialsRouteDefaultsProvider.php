@@ -30,13 +30,13 @@ class TestimonialsRouteDefaultsProvider implements RouteDefaultsProviderInterfac
     {
         return [
             '_controller' => TestimonialsController::class . '::indexAction',
-            'testimonial' => $this->repository->findById((int) $id),
+            'testimonial' => $this->repository->findById($id),
         ];
     }
 
     public function isPublished($entityClass, $id, $locale): bool
     {
-        $testimonial = $this->repository->findById((int) $id);
+        $testimonial = $this->repository->findById($id);
         if (!$this->supports($entityClass) || !$testimonial instanceof Testimonial) {
             return false;
         }

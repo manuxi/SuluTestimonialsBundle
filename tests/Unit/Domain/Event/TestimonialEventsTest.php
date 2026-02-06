@@ -22,7 +22,7 @@ class TestimonialEventsTest extends TestCase
     public function testCreatedEvent(): void
     {
         $testimonial = $this->prophesize(Testimonial::class);
-        $testimonial->getId()->willReturn(123);
+        $testimonial->getId()->willReturn('123');
         $event = new TestimonialCreatedEvent($testimonial->reveal(), ['title' => 'Test Title']);
 
         $this->assertEquals(['title' => 'Test Title'], $event->getEventPayload());
@@ -35,7 +35,7 @@ class TestimonialEventsTest extends TestCase
     public function testModifiedEvent(): void
     {
         $testimonial = $this->prophesize(Testimonial::class);
-        $testimonial->getId()->willReturn(123);
+        $testimonial->getId()->willReturn('123');
         $event = new TestimonialModifiedEvent($testimonial->reveal(), ['title' => 'Modified Title']);
 
         $this->assertSame('123', $event->getResourceId());
@@ -46,7 +46,7 @@ class TestimonialEventsTest extends TestCase
 
     public function testRemovedEvent(): void
     {
-        $event = new TestimonialRemovedEvent(123, 'Removed Title');
+        $event = new TestimonialRemovedEvent('123', 'Removed Title');
         $this->assertSame('123', $event->getResourceId());
         $this->assertSame('removed', $event->getEventType());
         $this->assertSame('Removed Title', $event->getResourceTitle());
@@ -55,7 +55,7 @@ class TestimonialEventsTest extends TestCase
     public function testPublishedEvent(): void
     {
         $testimonial = $this->prophesize(Testimonial::class);
-        $testimonial->getId()->willReturn(123);
+        $testimonial->getId()->willReturn('123');
         $event = new TestimonialPublishedEvent($testimonial->reveal(), ['title' => 'Published Title']);
 
         $this->assertSame('123', $event->getResourceId());
@@ -66,7 +66,7 @@ class TestimonialEventsTest extends TestCase
     public function testUnpublishedEvent(): void
     {
         $testimonial = $this->prophesize(Testimonial::class);
-        $testimonial->getId()->willReturn(123);
+        $testimonial->getId()->willReturn('123');
         $event = new TestimonialUnpublishedEvent($testimonial->reveal(), ['title' => 'Unpublished Title']);
 
         $this->assertSame('123', $event->getResourceId());
@@ -77,7 +77,7 @@ class TestimonialEventsTest extends TestCase
     public function testCopiedLanguageEvent(): void
     {
         $testimonial = $this->prophesize(Testimonial::class);
-        $testimonial->getId()->willReturn(123);
+        $testimonial->getId()->willReturn('123');
 
         $event = new TestimonialCopiedLanguageEvent($testimonial->reveal(), ['title' => 'Copied Title']);
 
@@ -89,7 +89,7 @@ class TestimonialEventsTest extends TestCase
     public function testRestoredEvent(): void
     {
         $testimonial = $this->prophesize(Testimonial::class);
-        $testimonial->getId()->willReturn(123);
+        $testimonial->getId()->willReturn('123');
         $event = new TestimonialRestoredEvent($testimonial->reveal(), ['title' => 'Restored Title']);
 
         $this->assertSame('123', $event->getResourceId());

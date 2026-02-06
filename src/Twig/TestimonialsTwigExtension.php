@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Twig;
@@ -15,7 +14,8 @@ class TestimonialsTwigExtension extends AbstractExtension implements GlobalsInte
     public function __construct(
         private TestimonialRepository $testimonialRepository,
         private int $ratingMaxValue = 5,
-    ) {
+    )
+    {
     }
 
     public function getGlobals(): array
@@ -33,10 +33,9 @@ class TestimonialsTwigExtension extends AbstractExtension implements GlobalsInte
         ];
     }
 
-    public function resolveTestimonial(int $id, string $locale = 'en'): ?Testimonial
+    public function resolveTestimonial(string $id, string $locale = 'en'): ?Testimonial
     {
-        $testimonial = $this->testimonialRepository->findById($id, $locale);
-
+        $testimonial = $this->testimonialRepository->findById($id);
         return $testimonial ?? null;
     }
 

@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Tests\Unit\Twig;
@@ -20,15 +19,6 @@ class TestimonialsTwigExtensionTest extends TestCase
     private ObjectProphecy $testimonialRepository;
     private TestimonialsTwigExtension $extension;
 
-    protected function setUp(): void
-    {
-        $this->testimonialRepository = $this->prophesize(TestimonialRepository::class);
-        $this->extension = new TestimonialsTwigExtension(
-            $this->testimonialRepository->reveal(),
-            10
-        );
-    }
-
     public function testImplementsGlobalsInterface(): void
     {
         $this->assertInstanceOf(GlobalsInterface::class, $this->extension);
@@ -37,7 +27,6 @@ class TestimonialsTwigExtensionTest extends TestCase
     public function testGetGlobals(): void
     {
         $globals = $this->extension->getGlobals();
-
         $this->assertArrayHasKey('testimonials_rating_max_value', $globals);
         $this->assertEquals(10, $globals['testimonials_rating_max_value']);
     }
@@ -47,9 +36,7 @@ class TestimonialsTwigExtensionTest extends TestCase
         $extensionWithDefault = new TestimonialsTwigExtension(
             $this->testimonialRepository->reveal()
         );
-
         $globals = $extensionWithDefault->getGlobals();
-
         $this->assertEquals(5, $globals['testimonials_rating_max_value']);
     }
 
@@ -65,22 +52,19 @@ class TestimonialsTwigExtensionTest extends TestCase
 
     public function testResolveTestimonial(): void
     {
-        $id = 1;
+        $id = '1';
         $locale = 'en';
         $testimonial = $this->prophesize(Testimonial::class);
-
-        $this->testimonialRepository->findById($id, $locale)->willReturn($testimonial->reveal());
-
+        $this->testimonialRepository->findById($id)->willReturn($testimonial->reveal());
         $result = $this->extension->resolveTestimonial($id, $locale);
         $this->assertSame($testimonial->reveal(), $result);
     }
 
     public function testResolveTestimonialNull(): void
     {
-        $id = 999;
+        $id = '999';
         $locale = 'en';
-        $this->testimonialRepository->findById($id, $locale)->willReturn(null);
-
+        $this->testimonialRepository->findById($id)->willReturn(null);
         $result = $this->extension->resolveTestimonial($id, $locale);
         $this->assertNull($result);
     }
@@ -93,10 +77,17 @@ class TestimonialsTwigExtensionTest extends TestCase
             $this->prophesize(Testimonial::class)->reveal(),
             $this->prophesize(Testimonial::class)->reveal(),
         ];
-
         $this->testimonialRepository->findByFilters([], 0, $limit, $limit, $locale)->willReturn($testimonials);
-
         $result = $this->extension->getTestimonials($limit, $locale);
         $this->assertSame($testimonials, $result);
+    }
+
+    protected function setUp(): void
+    {
+        $this->testimonialRepository = $this->prophesize(TestimonialRepository::class);
+        $this->extension = new TestimonialsTwigExtension(
+            $this->testimonialRepository->reveal(),
+            10
+        );
     }
 }
