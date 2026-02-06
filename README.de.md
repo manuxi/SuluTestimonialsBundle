@@ -26,6 +26,9 @@ Ein Sulu CMS Bundle zur Verwaltung von Kundenbewertungen, Reviews und Zitaten mi
 - **Papierkorb** - Gelöschte Testimonials wiederherstellen
 - **Aktivitätsprotokoll** - Alle Änderungen nachverfolgen
 
+## Breaking change
+- **uuid** - seit Version 1.5.0 (nicht kompatibel zu vorherigen Versionen)
+
 ## 📋 Voraussetzungen
 
 - PHP 8.2+

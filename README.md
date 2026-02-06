@@ -26,6 +26,9 @@ A Sulu CMS bundle for managing customer testimonials, reviews, and quotes with c
 - **Trash Support** - Restore deleted testimonials
 - **Activity Logging** - Track all changes
 
+## Breaking change
+- **uuid** - since 1.5.0 (not compatible to previous versions)
+
 ## 📋 Requirements
 
 - PHP 8.2+
