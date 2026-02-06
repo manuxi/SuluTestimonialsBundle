@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
+
 namespace Manuxi\SuluTestimonialsBundle\Tests\Unit\Teaser;
+
+use Doctrine\Common\Collections\ArrayCollection;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
@@ -14,29 +17,20 @@ use Sulu\Bundle\AdminBundle\Teaser\Teaser;
 use Sulu\Bundle\MediaBundle\Entity\MediaInterface;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Application\ContentEnhancer\ContentEnhancerInterface;
+use Sulu\Content\Domain\Exception\ContentNotFoundException;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+
 class TestimonialTeaserProviderTest extends TestCase
 {
     use ProphecyTrait;
+
     private ObjectProphecy $testimonialRepository;
     private ObjectProphecy $contentAggregator;
     private ObjectProphecy $contentEnhancer;
     private ObjectProphecy $translator;
     private TestimonialTeaserProvider $teaserProvider;
-    protected function setUp(): void
-    {
-        $this->testimonialRepository = $this->prophesize(TestimonialRepository::class);
-        $this->contentAggregator = $this->prophesize(ContentAggregatorInterface::class);
-        $this->contentEnhancer = $this->prophesize(ContentEnhancerInterface::class);
-        $this->translator = $this->prophesize(TranslatorInterface::class);
-        $this->teaserProvider = new TestimonialTeaserProvider(
-            $this->testimonialRepository->reveal(),
-            $this->contentAggregator->reveal(),
-            $this->contentEnhancer->reveal(),
-            $this->translator->reveal()
-        );
-    }
+
     public function testGetConfiguration(): void
     {
         $this->translator->trans('sulu_testimonials.testimonial', [], 'admin')
@@ -46,11 +40,13 @@ class TestimonialTeaserProviderTest extends TestCase
         $configuration = $this->teaserProvider->getConfiguration();
         $this->assertInstanceOf(TeaserConfiguration::class, $configuration);
     }
+
     public function testFindWithEmptyIds(): void
     {
         $result = $this->teaserProvider->find([], 'en');
         $this->assertSame([], $result);
     }
+
     public function testFind(): void
     {
         $uuid = 'test-uuid-123';
@@ -87,6 +83,7 @@ class TestimonialTeaserProviderTest extends TestCase
         $this->assertSame('Test Testimonial', $teasers[0]->getTitle());
         $this->assertSame('This is a test testimonial text.', $teasers[0]->getDescription());
     }
+
     public function testFindWithImage(): void
     {
         $uuid = 'test-uuid-456';
@@ -124,6 +121,7 @@ class TestimonialTeaserProviderTest extends TestCase
         $this->assertSame('Read more', $teaser->getMoreText());
         $this->assertSame(42, $teaser->getMediaId());
     }
+
     public function testFindWithNoTitle(): void
     {
         $uuid = 'test-uuid-789';
@@ -148,6 +146,7 @@ class TestimonialTeaserProviderTest extends TestCase
         // Should return empty because no title
         $this->assertCount(0, $teasers);
     }
+
     public function testFindWithContentNotFoundException(): void
     {
         $uuid = 'test-uuid-not-found';
@@ -155,6 +154,7 @@ class TestimonialTeaserProviderTest extends TestCase
         $testimonial = $this->prophesize(Testimonial::class);
         $testimonial->getUuid()->willReturn($uuid);
         $testimonial->getId()->willReturn($uuid); // Required for ContentNotFoundException
+        $testimonial->getDimensionContents()->willReturn(new ArrayCollection()); // Required for ContentNotFoundException
         $this->testimonialRepository->findByUuids(
             [$uuid],
             $locale,
@@ -163,9 +163,23 @@ class TestimonialTeaserProviderTest extends TestCase
         $this->contentAggregator->aggregate(
             $testimonial->reveal(),
             Argument::any()
-        )->willThrow(new \Sulu\Content\Domain\Exception\ContentNotFoundException($testimonial->reveal(), []));
+        )->willThrow(new ContentNotFoundException($testimonial->reveal(), []));
         $teasers = $this->teaserProvider->find([$uuid], $locale);
         // Should return empty because ContentNotFoundException was thrown
         $this->assertCount(0, $teasers);
+    }
+
+    protected function setUp(): void
+    {
+        $this->testimonialRepository = $this->prophesize(TestimonialRepository::class);
+        $this->contentAggregator = $this->prophesize(ContentAggregatorInterface::class);
+        $this->contentEnhancer = $this->prophesize(ContentEnhancerInterface::class);
+        $this->translator = $this->prophesize(TranslatorInterface::class);
+        $this->teaserProvider = new TestimonialTeaserProvider(
+            $this->testimonialRepository->reveal(),
+            $this->contentAggregator->reveal(),
+            $this->contentEnhancer->reveal(),
+            $this->translator->reveal()
+        );
     }
 }
