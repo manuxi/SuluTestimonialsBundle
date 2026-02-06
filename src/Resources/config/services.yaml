@@ -188,6 +188,18 @@ services:
         tags:
             - { name: kernel.event_subscriber }
 
+    # Teaser Provider
+    sulu_testimonials.testimonial_teaser_provider:
+        class: Manuxi\SuluTestimonialsBundle\Teaser\TestimonialTeaserProvider
+        public: true
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@sulu_content.content_aggregator'
+            - '@sulu_content.content_enhancer'
+            - '@translator'
+        tags:
+            - { name: sulu.teaser.provider, alias: testimonials }
+
     # Testimonial Mapper
     sulu_testimonials.testimonial_mapper:
         class: Manuxi\SuluTestimonialsBundle\Application\Mapper\TestimonialMapper

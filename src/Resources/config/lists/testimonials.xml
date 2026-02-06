@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <list xmlns="http://schemas.sulu.io/list-builder/list">
-    <key>testimonials_list</key>
+    <key>testimonials</key>
     <joins name="dimensionContent">
         <join>
             <entity-name>dimensionContent</entity-name>

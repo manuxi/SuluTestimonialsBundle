@@ -87,7 +87,7 @@ class TestimonialsAdmin extends Admin
             $viewCollection->add(
                 $this->viewBuilderFactory->createListViewBuilder(static::LIST_VIEW, '/testimonials/:locale')
                     ->setResourceKey($resourceKey)
-                    ->setListKey('testimonials_list')
+                    ->setListKey(Testimonial::LIST_KEY)
                     ->addListAdapters(['table'])
                     ->addLocales($locales)
                     ->setDefaultLocale($locales[0])
