@@ -117,9 +117,12 @@ services:
         class: Manuxi\SuluTestimonialsBundle\Routing\TestimonialsRouteDefaultsProvider
         public: true
         arguments:
-            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@doctrine.orm.entity_manager'
+            - '@sulu_content.content_aggregator'
+            - '@sulu_admin.metadata_provider_registry'
+            - '@sulu_http_cache.cache_lifetime.resolver'
         tags:
-            - { name: sulu_route.defaults_provider }
+            - { name: sulu_route.route_defaults_provider, resource_key: testimonials }
 
     sulu_testimonials.sitemap_provider:
         class: Manuxi\SuluTestimonialsBundle\Sitemap\TestimonialsSitemapProvider

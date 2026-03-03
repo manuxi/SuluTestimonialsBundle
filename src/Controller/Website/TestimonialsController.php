@@ -33,32 +33,43 @@ class TestimonialsController
     ) {
     }
 
+    /**
+     * Called via route defaults provider (object = DimensionContent, view = template path)
+     * or directly for preview (testimonial = Testimonial entity).
+     */
     public function indexAction(
-        Testimonial $testimonial,
-        string $view = '@SuluTestimonials/testimonial',
+        ?TestimonialDimensionContent $object = null,
+        ?Testimonial $testimonial = null,
+        ?string $view = null,
         bool $preview = false,
         bool $partial = false,
     ): Response {
         $request = $this->requestStack->getCurrentRequest();
         $locale = $request ? $request->getLocale() : 'en';
 
-        $stage = $preview ? DimensionContentInterface::STAGE_DRAFT : DimensionContentInterface::STAGE_LIVE;
+        // Route defaults provider passes resolved DimensionContent as 'object'
+        $content = $object;
 
-        /** @var TestimonialDimensionContent|null $content */
-        $content = $this->contentAggregator->aggregate(
-            $testimonial,
-            [
-                'locale' => $locale,
-                'stage' => $stage,
-            ]
-        );
+        // Fallback for preview or legacy: resolve from Testimonial entity
+        if (!$content && $testimonial) {
+            $stage = $preview ? DimensionContentInterface::STAGE_DRAFT : DimensionContentInterface::STAGE_LIVE;
 
-        if (!$content || !$content->getTitle()) {
-            $content = $this->findDimensionContentInCollection($testimonial, $locale, $stage);
+            /** @var TestimonialDimensionContent|null $content */
+            $content = $this->contentAggregator->aggregate(
+                $testimonial,
+                [
+                    'locale' => $locale,
+                    'stage' => $stage,
+                ]
+            );
+
+            if (!$content || !$content->getTitle()) {
+                $content = $this->findDimensionContentInCollection($testimonial, $locale, $stage);
+            }
         }
 
         if (!$content) {
-            throw new NotAcceptableHttpException(sprintf('No content found for locale "%s".', $locale));
+            throw new NotAcceptableHttpException(\sprintf('No content found for locale "%s".', $locale));
         }
 
         if (!$content->getContact() && $content->getContactId()) {
@@ -70,11 +81,11 @@ class TestimonialsController
 
         $parameters = $this->templateAttributeResolver->resolve([
             'testimonial' => $content,
-            'localizations' => $this->getLocalizationsArrayForEntity($testimonial),
+            'localizations' => $this->getLocalizationsArrayForEntity($content->getResource()),
             'ratingMaxValue' => $this->ratingMaxValue,
         ]);
 
-        $viewTemplate = $view . '.html.twig';
+        $viewTemplate = ($view ?? '@SuluTestimonials/testimonial') . '.html.twig';
 
         if (!$this->twig->getLoader()->exists($viewTemplate)) {
             throw new NotAcceptableHttpException(\sprintf('Template "%s" does not exist.', $viewTemplate));
@@ -82,16 +93,16 @@ class TestimonialsController
 
         if ($partial) {
             $twigTemplate = $this->twig->load($viewTemplate);
-            $content = $twigTemplate->renderBlock('content', $this->twig->mergeGlobals($parameters));
+            $rendered = $twigTemplate->renderBlock('content', $this->twig->mergeGlobals($parameters));
         } elseif ($preview) {
             $parameters['previewParentTemplate'] = $viewTemplate;
             $parameters['previewContentReplacer'] = Preview::CONTENT_REPLACER;
-            $content = $this->twig->render('@SuluWebsite/Preview/preview.html.twig', $parameters);
+            $rendered = $this->twig->render('@SuluWebsite/Preview/preview.html.twig', $parameters);
         } else {
-            $content = $this->twig->render($viewTemplate, $parameters);
+            $rendered = $this->twig->render($viewTemplate, $parameters);
         }
 
-        return new Response($content);
+        return new Response($rendered);
     }
 
     /**
@@ -118,6 +129,9 @@ class TestimonialsController
         return null;
     }
 
+    /**
+     * @return array<string, array{locale: string, url: string|null}>
+     */
     protected function getLocalizationsArrayForEntity(Testimonial $testimonial): array
     {
         $routes = $this->routeRepository->findBy([
