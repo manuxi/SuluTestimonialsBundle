@@ -36,8 +36,7 @@
                 <option name="default">0</option>
             </options>
         </field>
-        <field name="ghostLocale" type="string" length="5" nullable="true" column="ghost_locale"/>
-        <field name="availableLocales" type="json" nullable="true" column="available_locales"/>
+        <!-- ghostLocale + availableLocales: managed by Sulu MetadataLoader -->
         <!-- WorkflowTrait -->
         <field name="workflowPlace" type="string" length="32" nullable="true" column="workflowPlace"/>
         <field name="workflowPublished" type="datetime_immutable" nullable="true" column="workflowPublished"/>
