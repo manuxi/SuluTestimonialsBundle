@@ -7,7 +7,7 @@ namespace Manuxi\SuluTestimonialsBundle\Controller\Website;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
 use Doctrine\ORM\EntityManagerInterface;
-use Sulu\Bundle\ContactBundle\Entity\Contact;
+use Sulu\Bundle\ContactBundle\Entity\ContactInterface;
 use Sulu\Bundle\PreviewBundle\Preview\Preview;
 use Sulu\Bundle\WebsiteBundle\Resolver\TemplateAttributeResolverInterface;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
@@ -73,7 +73,7 @@ class TestimonialsController
         }
 
         if (!$content->getContact() && $content->getContactId()) {
-            $contact = $this->entityManager->getReference(Contact::class, $content->getContactId());
+            $contact = $this->entityManager->find(ContactInterface::class, $content->getContactId());
             if ($contact) {
                 $content->setContact($contact);
             }
