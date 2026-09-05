@@ -94,7 +94,7 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
         );
         $this->addInternalFilters($queryBuilder, $filters, $alias);
 
-        $queryBuilder->select('COUNT(DISTINCT ' . $alias . '.id)');
+        $queryBuilder->select('COUNT(DISTINCT ' . $alias . '.uuid)');
         return (int) $queryBuilder->getQuery()->getSingleScalarResult();
     }
 
@@ -105,18 +105,30 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
         $queryBuilder = $this->getTestimonialRepository()->createQueryBuilder($alias);
 
         $filters = $this->mapFilters($filters);
+        $dimensionSortBys = \array_diff_key($sortBys, ['created' => true, 'changed' => true]);
         $this->dimensionContentQueryEnhancer->addFilters(
             $queryBuilder,
             $alias,
             $this->dimensionContentClassName,
             $filters,
-            $sortBys
+            $dimensionSortBys
         );
         $dimensionContentAlias = $this->addInternalFilters($queryBuilder, $filters, $alias);
 
-        $queryBuilder->select('DISTINCT ' . $alias . '.id as id');
+        foreach (['created', 'changed'] as $dimensionSortColumn) {
+            if (isset($sortBys[$dimensionSortColumn])) {
+                $queryBuilder->addOrderBy(
+                    $dimensionContentAlias . '.' . $dimensionSortColumn,
+                    $sortBys[$dimensionSortColumn]
+                );
+            }
+        }
+
+        $queryBuilder->select('DISTINCT ' . $alias . '.uuid as id');
         $queryBuilder->addSelect($dimensionContentAlias . '.title');
         $queryBuilder->addSelect($dimensionContentAlias . '.rating');
+        $queryBuilder->addSelect($dimensionContentAlias . '.date AS testimonialDate');
+
         $queryBuilder->addSelect($dimensionContentAlias . '.workflowPlace');
         $queryBuilder->addSelect($dimensionContentAlias . '.workflowPublished');
 
@@ -133,6 +145,7 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
                 'id' => (string) $item['id'],
                 'title' => (string) ($item['title'] ?? ''),
                 'rating' => (string) ($item['rating'] ?? ''),
+                'date' => $item['testimonialDate'],
                 'publishedState' => 'published' === ($item['workflowPlace'] ?? ''),
                 'published' => $item['workflowPublished'] ?? null,
             ];
@@ -161,6 +174,7 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
             'websiteTagOperator' => $filters['websiteTagOperator'] ?? 'OR',
             'templateKeys' => [],
             'locale' => $filters['locale'],
+
             'dataSource' => $filters['dataSource'] ?? null,
             'limit' => $filters['limit'] ?? null,
             'includeSubFolders' => $filters['includeSubFolders'] ?? false,

@@ -97,6 +97,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getText(): ?string
     {
         return $this->text;
@@ -108,6 +109,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getRating(): ?string
     {
         return $this->rating;
@@ -119,6 +121,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getSource(): ?string
     {
         return $this->source;
@@ -130,6 +133,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getShowOrganisation(): ?bool
     {
         return $this->showOrganisation;
@@ -141,6 +145,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getShowContact(): ?bool
     {
         return $this->showContact;
@@ -152,6 +157,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getShowDate(): ?bool
     {
         return $this->showDate;
@@ -163,6 +169,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getDate(): ?\DateTimeImmutable
     {
         return $this->date;
@@ -203,6 +210,7 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         return $this->contactId;
     }
 
+    #[Serializer\Groups(['default', 'admin', 'fullTestimonial', 'partialTestimonial'])]
     public function getWebsite(): ?string
     {
         return $this->website;
@@ -247,11 +255,11 @@ class TestimonialDimensionContent implements DimensionContentInterface, ExcerptI
         if (isset($templateData['source']))
             $this->source = $templateData['source'];
         if (isset($templateData['showOrganisation']))
-            $this->showOrganisation = $templateData['showOrganisation'];
+            $this->showOrganisation = (bool) $templateData['showOrganisation'];
         if (isset($templateData['showContact']))
-            $this->showContact = $templateData['showContact'];
+            $this->showContact = (bool) $templateData['showContact'];
         if (isset($templateData['showDate']))
-            $this->showDate = $templateData['showDate'];
+            $this->showDate = (bool) $templateData['showDate'];
         if (isset($templateData['website']))
             $this->website = $templateData['website'];
 

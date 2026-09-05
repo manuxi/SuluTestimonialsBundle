@@ -40,9 +40,12 @@ class TestimonialNormalizerTest extends TestCase
         $image->getId()->willReturn(123);
         $contact = $this->prophesize(ContactInterface::class);
         $contact->getId()->willReturn(456);
+        $contact->getFirstName()->willReturn('Erika');
+        $contact->getLastName()->willReturn('Mustermann');
 
         $object->getImage()->willReturn($image->reveal());
         $object->getContact()->willReturn($contact->reveal());
+        $object->getDate()->willReturn(null);
 
         $normalizedData = ['foo' => 'bar'];
 
@@ -52,6 +55,7 @@ class TestimonialNormalizerTest extends TestCase
         $this->assertEquals(123, $result['image']['id']);
         $this->assertArrayHasKey('contact', $result);
         $this->assertEquals(456, $result['contact']['id']);
+        $this->assertSame('Erika Mustermann', $result['contact']['fullName']);
         $this->assertEquals('bar', $result['foo']);
     }
 
@@ -60,6 +64,7 @@ class TestimonialNormalizerTest extends TestCase
         $object = $this->prophesize(TestimonialDimensionContent::class);
         $object->getImage()->willReturn(null);
         $object->getContact()->willReturn(null);
+        $object->getDate()->willReturn(null);
 
         $normalizedData = ['foo' => 'bar'];
 

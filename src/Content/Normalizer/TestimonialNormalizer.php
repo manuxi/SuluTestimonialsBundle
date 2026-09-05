@@ -36,12 +36,19 @@ class TestimonialNormalizer implements NormalizerInterface
             $normalizedData['image']['id'] = $image->getId();
         }
 
+        $date = $object->getDate();
+        if (null !== $date) {
+            $normalizedData['date'] = $date->format('Y-m-d');
+        }
+
         $contact = $object->getContact();
         if (null !== $contact) {
-            if (!isset($normalizedData['contact']) || !\is_array($normalizedData['contact'])) {
-                $normalizedData['contact'] = [];
-            }
-            $normalizedData['contact']['id'] = $contact->getId();
+            $normalizedData['contact'] = [
+                'id' => $contact->getId(),
+                'firstName' => $contact->getFirstName(),
+                'lastName' => $contact->getLastName(),
+                'fullName' => trim($contact->getFirstName() . ' ' . $contact->getLastName()),
+            ];
         }
 
         return $normalizedData;

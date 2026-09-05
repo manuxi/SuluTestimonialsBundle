@@ -81,6 +81,16 @@ npm install
 npm run build
 ```
 
+### Kompatibilität des Admin-JavaScripts
+
+Das Bundle enthält JavaScript-Registrierungen für seine Testimonial-Feldtypen. Der Import von `sulu-testimonials-bundle` ist optional und für serverseitige Routen, Controller oder Templates nicht erforderlich.
+
+Wenn [SuluAdminExtrasBundle](https://github.com/manuxi/SuluAdminExtrasBundle) installiert ist, dessen JavaScript-Registrierung für die Sternefelder verwenden und `sulu-testimonials-bundle` **nicht zusätzlich** importieren. Beide Bundles registrieren das Feld `star_rating` unter demselben Schlüssel. Ein doppelter Import lässt den Sulu Admin nach dem Login mit folgendem Fehler hängen:
+
+```text
+Error: The key "star_rating" has already been used for another field
+```
+
 ### Schritt 6: Berechtigungen vergeben
 
 1. Zu **Einstellungen → Benutzerrollen** im Sulu Admin gehen
