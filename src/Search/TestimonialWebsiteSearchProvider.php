@@ -100,7 +100,7 @@ class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
         $contact = $dimensionContent->getContact();
         $contactName = $contact ? trim($contact->getFirstName() . ' ' . $contact->getLastName()) : null;
 
-        $url = $dimensionContent->getRoute()?->getPath();
+        $url = $dimensionContent->getRoute()?->getSlug();
 
         return [
             'id' => 'testimonial-' . $testimonial->getId() . '-' . $locale,

@@ -157,7 +157,7 @@ class TestimonialSearchListener implements EventSubscriberInterface
         $contact = $dimensionContent->getContact();
         $contactName = $contact ? trim($contact->getFirstName() . ' ' . $contact->getLastName()) : null;
 
-        $url = $dimensionContent->getRoute()?->getPath();
+        $url = $dimensionContent->getRoute()?->getSlug();
 
         $this->engine->saveDocument('website', [
             'id' => $this->getDocumentId($testimonial, $locale),
