@@ -164,6 +164,7 @@ class TestimonialSearchListener implements EventSubscriberInterface
             'resourceKey' => Testimonial::RESOURCE_KEY,
             'resourceId' => (string) $testimonial->getId(),
             'locale' => $locale,
+            'webspaces' => $this->getWebspacesForLocale($locale),
             'title' => $dimensionContent->getTitle() ?? '',
             'content' => $content,
             'contact' => $contactName,
@@ -188,5 +189,23 @@ class TestimonialSearchListener implements EventSubscriberInterface
         }
 
         return array_keys($locales);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getWebspacesForLocale(string $locale): array
+    {
+        $webspaces = [];
+        foreach ($this->webspaceManager->getWebspaceCollection() as $webspace) {
+            foreach ($webspace->getAllLocalizations() as $localization) {
+                if ($localization->getLocale() === $locale) {
+                    $webspaces[] = $webspace->getKey();
+                    break;
+                }
+            }
+        }
+
+        return $webspaces;
     }
 }

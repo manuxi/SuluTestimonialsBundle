@@ -30,7 +30,7 @@ class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
 
     public function total(): ?int
     {
-        $locales = $this->getLocales();
+        $locales = array_keys($this->getWebspacesByLocale());
         $total = 0;
         foreach ($locales as $locale) {
             $total += $this->testimonialRepository->countPublished($locale);
@@ -41,9 +41,9 @@ class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
 
     public function provide(ReindexConfig $reindexConfig): \Generator
     {
-        $locales = $this->getLocales();
+        $webspacesByLocale = $this->getWebspacesByLocale();
 
-        foreach ($locales as $locale) {
+        foreach ($webspacesByLocale as $locale => $webspaces) {
             $testimonials = $this->testimonialRepository->findAllByLocale($locale, DimensionContentInterface::STAGE_LIVE);
 
             foreach ($testimonials as $testimonial) {
@@ -73,24 +73,30 @@ class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
                     continue;
                 }
 
-                yield $this->createDocument($testimonial, $dimensionContent, $locale);
+                yield $this->createDocument($testimonial, $dimensionContent, $locale, $webspaces);
             }
         }
     }
 
-    private function getLocales(): array
+    /**
+     * @return array<string, list<string>>
+     */
+    private function getWebspacesByLocale(): array
     {
-        $locales = [];
+        $webspacesByLocale = [];
         foreach ($this->webspaceManager->getWebspaceCollection() as $webspace) {
             foreach ($webspace->getAllLocalizations() as $localization) {
-                $locales[$localization->getLocale()] = true;
+                $webspacesByLocale[$localization->getLocale()][] = $webspace->getKey();
             }
         }
 
-        return array_keys($locales);
+        return $webspacesByLocale;
     }
 
-    private function createDocument(Testimonial $testimonial, TestimonialDimensionContent $dimensionContent, string $locale): array
+    /**
+     * @param list<string> $webspaces
+     */
+    private function createDocument(Testimonial $testimonial, TestimonialDimensionContent $dimensionContent, string $locale, array $webspaces): array
     {
         $content = array_filter([
             $dimensionContent->getText(),
@@ -107,6 +113,7 @@ class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
             'resourceKey' => Testimonial::RESOURCE_KEY,
             'resourceId' => (string) $testimonial->getId(),
             'locale' => $locale,
+            'webspaces' => $webspaces,
             'title' => $dimensionContent->getTitle() ?? '',
             'content' => $content,
             'contact' => $contactName,

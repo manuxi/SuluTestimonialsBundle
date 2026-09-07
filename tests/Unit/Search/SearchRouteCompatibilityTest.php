@@ -10,6 +10,10 @@ use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
 use Manuxi\SuluTestimonialsBundle\Search\TestimonialSearchListener;
 use Manuxi\SuluTestimonialsBundle\Search\TestimonialWebsiteSearchProvider;
 use PHPUnit\Framework\TestCase;
+use Sulu\Component\Localization\Localization;
+use Sulu\Component\Webspace\Manager\WebspaceCollection;
+use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
+use Sulu\Component\Webspace\Webspace;
 use Sulu\Route\Domain\Model\Route;
 
 final class SearchRouteCompatibilityTest extends TestCase
@@ -21,8 +25,9 @@ final class SearchRouteCompatibilityTest extends TestCase
         $dimension->setRoute(new Route('testimonials', $testimonial->getId(), 'de', '/kundenstimmen/test'));
         $provider = (new \ReflectionClass(TestimonialWebsiteSearchProvider::class))->newInstanceWithoutConstructor();
         $method = new \ReflectionMethod($provider, 'createDocument');
-        $document = $method->invoke($provider, $testimonial, $dimension, 'de');
+        $document = $method->invoke($provider, $testimonial, $dimension, 'de', ['bertrams-media']);
         self::assertSame('/kundenstimmen/test', $document['url']);
+        self::assertSame(['bertrams-media'], $document['webspaces']);
     }
 
     public function testWebsiteListenerUsesSulu3RouteSlug(): void
@@ -31,9 +36,15 @@ final class SearchRouteCompatibilityTest extends TestCase
         $dimension = new TestimonialDimensionContent($testimonial);
         $dimension->setRoute(new Route('testimonials', $testimonial->getId(), 'de', '/kundenstimmen/test'));
         $engine = $this->createMock(EngineInterface::class);
-        $engine->expects(self::once())->method('saveDocument')->with('website', self::callback(static fn(array $document): bool => $document['url'] === '/kundenstimmen/test'));
+        $engine->expects(self::once())->method('saveDocument')->with('website', self::callback(static fn(array $document): bool => $document['url'] === '/kundenstimmen/test' && $document['webspaces'] === ['bertrams-media']));
+        $webspace = new Webspace();
+        $webspace->setKey('bertrams-media');
+        $webspace->setLocalizations([new Localization('de')]);
+        $webspaceManager = $this->createMock(WebspaceManagerInterface::class);
+        $webspaceManager->method('getWebspaceCollection')->willReturn(new WebspaceCollection(['bertrams-media' => $webspace]));
         $listener = (new \ReflectionClass(TestimonialSearchListener::class))->newInstanceWithoutConstructor();
         (new \ReflectionProperty($listener, 'engine'))->setValue($listener, $engine);
+        (new \ReflectionProperty($listener, 'webspaceManager'))->setValue($listener, $webspaceManager);
         (new \ReflectionMethod($listener, 'indexForWebsite'))->invoke($listener, $testimonial, $dimension, 'de');
     }
 }
