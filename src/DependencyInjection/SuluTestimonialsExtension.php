@@ -36,6 +36,11 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
         $yamlLoader->load('services.yaml');
         $yamlLoader->load('controller.yaml');
 
+        // tools for the Sulu MCP server, only if sulu/mcp-bundle is installed
+        if (class_exists(McpCapabilityAttributeMcpTool::class) && class_exists(SuluMcpDomainSecurityRequiresPermission::class)) {
+            $yamlLoader->load('services-mcp.yaml');
+        }
+
         $this->configurePersistence($config['objects'], $container);
     }
 

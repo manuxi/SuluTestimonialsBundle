@@ -183,6 +183,7 @@ Mehrere Testimonials:
 - [Konfiguration](docs/configuration.de.md)
 - [Verwendung & Templates](docs/usage.de.md)
 - [Bewertungssystem](docs/rating.de.md)
+- [MCP-Tools](docs/mcp.de.md)
 - [Admin-Listen-Anpassung](docs/admin-list.de.md)
 
 ## 🔌 Optionale Integrationen

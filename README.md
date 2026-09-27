@@ -183,6 +183,7 @@ Multiple testimonials:
 - [Configuration](docs/configuration.en.md)
 - [Usage & Templates](docs/usage.en.md)
 - [Rating System](docs/rating.en.md)
+- [MCP tools](docs/mcp.en.md)
 - [Admin List Customization](docs/admin-list.en.md)
 
 ## 🔌 Optional Integrations
