@@ -4,7 +4,9 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                                       http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
-    <entity name="Manuxi\SuluTestimonialsBundle\Entity\Testimonial" table="app_testimonial">
+    <entity name="Manuxi\SuluTestimonialsBundle\Entity\Testimonial"
+            table="app_testimonial"
+            repository-class="Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository">
         <id name="uuid" type="string" column="uuid" length="36">
             <generator strategy="NONE"/>
         </id>
