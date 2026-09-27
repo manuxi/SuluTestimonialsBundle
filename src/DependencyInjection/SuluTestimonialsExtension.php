@@ -6,6 +6,8 @@ namespace Manuxi\SuluTestimonialsBundle\DependencyInjection;
 
 use Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAdmin;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
+use Manuxi\SuluTestimonialsBundle\Repository\TestimonialDimensionContentRepository;
+use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
 use Sulu\Bundle\PersistenceBundle\DependencyInjection\PersistenceExtensionTrait;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -37,11 +39,18 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
         $yamlLoader->load('controller.yaml');
 
         // tools for the Sulu MCP server, only if sulu/mcp-bundle is installed
-        if (class_exists(McpCapabilityAttributeMcpTool::class) && class_exists(SuluMcpDomainSecurityRequiresPermission::class)) {
+        if (class_exists(\Mcp\Capability\Attribute\McpTool::class) && class_exists(\Sulu\Mcp\Domain\Security\RequiresPermission::class)) {
             $yamlLoader->load('services-mcp.yaml');
         }
 
         $this->configurePersistence($config['objects'], $container);
+
+        // PersistenceExtensionTrait creates EntityManager/ClassMetadata repositories,
+        // whereas these repositories are Doctrine repository services and require a
+        // ManagerRegistry. Keep Sulu's conventional service ids as aliases to the
+        // tagged ServiceEntityRepository services.
+        $container->setAlias('sulu.repository.testimonial', TestimonialRepository::class)->setPublic(true);
+        $container->setAlias('sulu.repository.testimonial_dimension_content', TestimonialDimensionContentRepository::class)->setPublic(true);
     }
 
     public function prepend(ContainerBuilder $container): void

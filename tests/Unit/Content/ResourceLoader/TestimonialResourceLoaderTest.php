@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Manuxi\SuluTestimonialsBundle\Tests\Unit\Content\ResourceLoader;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Manuxi\SuluTestimonialsBundle\Content\ResourceLoader\TestimonialResourceLoader;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
@@ -18,8 +19,12 @@ class TestimonialResourceLoaderTest extends TestCase
     {
         $repository = $this->prophesize(TestimonialRepository::class);
         $loader = new TestimonialResourceLoader($repository->reveal());
+        $dimensionContent = $this->prophesize(DimensionContentInterface::class);
+        $dimensionContent->getStage()->willReturn(DimensionContentInterface::STAGE_LIVE);
+        $dimensionContent->getLocale()->willReturn('en');
         $testimonial = $this->prophesize(Testimonial::class);
         $testimonial->getId()->willReturn('123');
+        $testimonial->getDimensionContents()->willReturn(new ArrayCollection([$dimensionContent->reveal()]));
         $repository->findByUuids(['123'], 'en', DimensionContentInterface::STAGE_LIVE)->willReturn([$testimonial->reveal()]);
         $result = $loader->load(['123'], 'en');
         $this->assertCount(1, $result);

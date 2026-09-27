@@ -170,8 +170,6 @@ services:
             - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
             - '@sulu_core.webspace.webspace_manager'
             - '@sulu_content.content_aggregator'
-        tags:
-            - { name: cmsig_seal.reindex_provider }
 
     sulu_testimonials.search.website_provider:
         class: Manuxi\SuluTestimonialsBundle\Search\TestimonialWebsiteSearchProvider
@@ -179,8 +177,6 @@ services:
             - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
             - '@sulu_core.webspace.webspace_manager'
             - '@sulu_content.content_aggregator'
-        tags:
-            - { name: cmsig_seal.reindex_provider }
 
     sulu_testimonials.search.listener:
         class: Manuxi\SuluTestimonialsBundle\Search\TestimonialSearchListener
