@@ -32,7 +32,17 @@ class TestimonialResourceLoader implements ResourceLoaderInterface
 
 
         $stage = $params['stage'] ?? DimensionContentInterface::STAGE_LIVE;
-        $result = $this->testimonialRepository->findByUuids($ids, $locale, $stage);
+        // Without a locale nothing can be resolved. The repository also returns entries that have no content in this
+        // locale and stage (for example after unpublishing: only the unlocalized content is left); resolving those
+        // ends in an error, so they are skipped like unpublished articles.
+        if (null === $locale) {
+            return [];
+        }
+
+        $result = array_filter(
+            $this->testimonialRepository->findByUuids($ids, $locale, $stage),
+            fn ($testimonial) => $this->hasContentFor($testimonial, $locale, $stage),
+        );
 
         $mappedResult = [];
         foreach ($result as $event) {
@@ -40,6 +50,17 @@ class TestimonialResourceLoader implements ResourceLoaderInterface
         }
 
         return $mappedResult;
+    }
+
+    private function hasContentFor(object $entity, string $locale, string $stage): bool
+    {
+        foreach ($entity->getDimensionContents() as $dimensionContent) {
+            if ($dimensionContent->getStage() === $stage && $dimensionContent->getLocale() === $locale) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function getKey(): string
