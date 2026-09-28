@@ -1,0 +1,30 @@
+# Automation (scheduled publish/unpublish) integration for sulu/automation-bundle. Loaded only if that bundle is installed.
+services:
+    sulu_testimonials.automation.admin:
+        class: Manuxi\SuluTestimonialsBundle\Admin\TestimonialsAutomationAdmin
+        arguments:
+            - '@sulu_automation.automation_view_builder_factory'
+            - '@sulu_security.security_checker'
+        tags:
+            - { name: sulu.admin }
+            - { name: sulu.context, context: admin }
+
+    sulu_testimonials.automation.publish_handler:
+        class: Manuxi\SuluTestimonialsBundle\TaskHandler\TestimonialPublishTaskHandler
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@sulu_content.content_workflow'
+            - '@doctrine.orm.entity_manager'
+            - '@sulu_activity.domain_event_collector'
+        tags:
+            - { name: task.handler }
+
+    sulu_testimonials.automation.unpublish_handler:
+        class: Manuxi\SuluTestimonialsBundle\TaskHandler\TestimonialUnpublishTaskHandler
+        arguments:
+            - '@Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository'
+            - '@sulu_content.content_workflow'
+            - '@doctrine.orm.entity_manager'
+            - '@sulu_activity.domain_event_collector'
+        tags:
+            - { name: task.handler }

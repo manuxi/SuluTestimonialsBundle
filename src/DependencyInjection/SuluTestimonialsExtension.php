@@ -43,6 +43,11 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
             $yamlLoader->load('services-mcp.yaml');
         }
 
+        // scheduled publish/unpublish tasks, only if sulu/automation-bundle is installed
+        if (class_exists(\Sulu\Bundle\AutomationBundle\TaskHandler\AutomationTaskHandlerInterface::class)) {
+            $yamlLoader->load('services-automation.yaml');
+        }
+
         $this->configurePersistence($config['objects'], $container);
 
         // PersistenceExtensionTrait creates EntityManager/ClassMetadata repositories,
