@@ -25,9 +25,9 @@ final class SearchRouteCompatibilityTest extends TestCase
         $dimension->setRoute(new Route('testimonials', $testimonial->getId(), 'de', '/kundenstimmen/test'));
         $provider = (new \ReflectionClass(TestimonialWebsiteSearchProvider::class))->newInstanceWithoutConstructor();
         $method = new \ReflectionMethod($provider, 'createDocument');
-        $document = $method->invoke($provider, $testimonial, $dimension, 'de', ['bertrams-media']);
+        $document = $method->invoke($provider, $testimonial, $dimension, 'de', ['test-webspace']);
         self::assertSame('/kundenstimmen/test', $document['url']);
-        self::assertSame(['bertrams-media'], $document['webspaces']);
+        self::assertSame(['test-webspace'], $document['webspaces']);
     }
 
     public function testWebsiteListenerUsesSulu3RouteSlug(): void
@@ -36,12 +36,12 @@ final class SearchRouteCompatibilityTest extends TestCase
         $dimension = new TestimonialDimensionContent($testimonial);
         $dimension->setRoute(new Route('testimonials', $testimonial->getId(), 'de', '/kundenstimmen/test'));
         $engine = $this->createMock(EngineInterface::class);
-        $engine->expects(self::once())->method('saveDocument')->with('website', self::callback(static fn(array $document): bool => $document['url'] === '/kundenstimmen/test' && $document['webspaces'] === ['bertrams-media']));
+        $engine->expects(self::once())->method('saveDocument')->with('website', self::callback(static fn(array $document): bool => $document['url'] === '/kundenstimmen/test' && $document['webspaces'] === ['test-webspace']));
         $webspace = new Webspace();
-        $webspace->setKey('bertrams-media');
+        $webspace->setKey('test-webspace');
         $webspace->setLocalizations([new Localization('de')]);
         $webspaceManager = $this->createMock(WebspaceManagerInterface::class);
-        $webspaceManager->method('getWebspaceCollection')->willReturn(new WebspaceCollection(['bertrams-media' => $webspace]));
+        $webspaceManager->method('getWebspaceCollection')->willReturn(new WebspaceCollection(['test-webspace' => $webspace]));
         $listener = (new \ReflectionClass(TestimonialSearchListener::class))->newInstanceWithoutConstructor();
         (new \ReflectionProperty($listener, 'engine'))->setValue($listener, $engine);
         (new \ReflectionProperty($listener, 'webspaceManager'))->setValue($listener, $webspaceManager);
