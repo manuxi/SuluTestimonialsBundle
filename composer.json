@@ -1,18 +1,17 @@
 {
     "name": "manuxi/sulu-testimonials-bundle",
-    "description": "Say hello to Sulu testimonials!",
+    "description": "A Sulu CMS bundle for managing customer testimonials, reviews, and quotes with configurable star ratings.",
     "type": "symfony-bundle",
     "keywords": [
         "sulu",
         "suluCms",
-        "sulu bundle",
         "testimonials"
     ],
     "homepage": "https://github.com/manuxi/SuluTestimonialsBundle",
     "license": "MIT",
     "authors": [
         {
-            "name": "Manuxi",
+            "name": "Manuel Bertrams",
             "email": "manu@bytefresser.de"
         }
     ],
