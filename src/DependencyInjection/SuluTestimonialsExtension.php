@@ -44,7 +44,7 @@ class SuluTestimonialsExtension extends Extension implements PrependExtensionInt
         }
 
         // scheduled publish/unpublish tasks, only if sulu/automation-bundle is installed
-        if (class_exists(\Sulu\Bundle\AutomationBundle\TaskHandler\AutomationTaskHandlerInterface::class)) {
+        if (interface_exists(\Sulu\Bundle\AutomationBundle\TaskHandler\AutomationTaskHandlerInterface::class)) {
             $yamlLoader->load('services-automation.yaml');
         }
 
