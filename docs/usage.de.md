@@ -29,6 +29,15 @@ Die flexibelste Methode zur Anzeige von Testimonials. Unterstützt Filterung, So
 - `created` - Nach Anlagedatum
 - `changed` - Nach letzter Änderung
 
+**Filtern auf der Website:** Der Provider wertet auch Kategorien und Tags aus, die ein Besucher wählt. Er liest sie aus der Query-String, ein Filter ist also ein einfacher Link oder ein `GET`-Formular:
+
+| Parameter | Bedeutung | Beispiel |
+|---|---|---|
+| `categories` | Kategorie-IDs, kommagetrennt | `?categories=9,12` |
+| `tags` | Tag-Namen, kommagetrennt | `?tags=Support,Online` |
+
+Mehrere Werte werden standardmäßig mit **ODER** verknüpft; mit `website_categories_operator` / `website_tags_operator` auf `AND` in den Params des Felds müssen alle zutreffen. Die Auswahl des Besuchers schränkt das Ergebnis des Felds weiter ein, im Admin gesetzte Kategorien und Tags gelten weiterhin. Paginierung und die Gesamtzahl der Smart-Content-Ansicht (`view.total`) beziehen sich auf das gefilterte Ergebnis. Die Parameternamen lassen sich mit `categories_parameter` und `tags_parameter` ändern.
+
 ### Einzelauswahl
 
 Ein bestimmtes Testimonial auswählen:

@@ -29,6 +29,15 @@ The most flexible way to display testimonials. Supports filtering, sorting, and 
 - `created` - By creation date
 - `changed` - By last modification
 
+**Filtering on the website:** the provider also evaluates categories and tags that a visitor picks. It reads them from the query string, so a filter is a plain link or a `GET` form:
+
+| Parameter | Meaning | Example |
+|---|---|---|
+| `categories` | Category ids, comma separated | `?categories=9,12` |
+| `tags` | Tag names, comma separated | `?tags=Support,Online` |
+
+Several values match with **OR** by default; set `website_categories_operator` / `website_tags_operator` to `AND` in the params of the field to require all of them. The visitor's choice narrows down the result of the field, categories and tags set in the admin still apply. Paging and the total of the smart content view (`view.total`) refer to the filtered result. The parameter names can be changed with `categories_parameter` and `tags_parameter`.
+
 ### Single Testimonial Selection
 
 Select one specific testimonial:
