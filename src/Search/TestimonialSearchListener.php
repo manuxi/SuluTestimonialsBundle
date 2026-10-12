@@ -149,29 +149,8 @@ class TestimonialSearchListener implements EventSubscriberInterface
 
     private function indexForWebsite(Testimonial $testimonial, TestimonialDimensionContent $dimensionContent, string $locale): void
     {
-        $content = array_filter([
-            $dimensionContent->getText(),
-            $dimensionContent->getSource(),
-        ]);
-
-        $contact = $dimensionContent->getContact();
-        $contactName = $contact ? trim($contact->getFirstName() . ' ' . $contact->getLastName()) : null;
-
-        $url = $dimensionContent->getRoute()?->getSlug();
-
-        $this->engine->saveDocument('website', [
-            'id' => $this->getDocumentId($testimonial, $locale),
-            'resourceKey' => Testimonial::RESOURCE_KEY,
-            'resourceId' => (string) $testimonial->getId(),
-            'locale' => $locale,
-            'webspaces' => $this->getWebspacesForLocale($locale),
-            'title' => $dimensionContent->getTitle() ?? '',
-            'content' => $content,
-            'contact' => $contactName,
-            'rating' => $dimensionContent->getRating(),
-            'url' => $url,
-            'mediaId' => $dimensionContent->getImage()?->getId(),
-        ]);
+        // the same document as the full reindex writes (TestimonialWebsiteSearchProvider)
+        $this->engine->saveDocument('website', TestimonialWebsiteDocument::create($testimonial, $dimensionContent, $locale, $this->getWebspacesForLocale($locale)));
     }
 
     private function getDocumentId(Testimonial $testimonial, string $locale): string

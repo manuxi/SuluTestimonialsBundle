@@ -98,28 +98,6 @@ class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
      */
     private function createDocument(Testimonial $testimonial, TestimonialDimensionContent $dimensionContent, string $locale, array $webspaces): array
     {
-        $content = array_filter([
-            $dimensionContent->getText(),
-            $dimensionContent->getSource(),
-        ]);
-
-        $contact = $dimensionContent->getContact();
-        $contactName = $contact ? trim($contact->getFirstName() . ' ' . $contact->getLastName()) : null;
-
-        $url = $dimensionContent->getRoute()?->getSlug();
-
-        return [
-            'id' => 'testimonial-' . $testimonial->getId() . '-' . $locale,
-            'resourceKey' => Testimonial::RESOURCE_KEY,
-            'resourceId' => (string) $testimonial->getId(),
-            'locale' => $locale,
-            'webspaces' => $webspaces,
-            'title' => $dimensionContent->getTitle() ?? '',
-            'content' => $content,
-            'contact' => $contactName,
-            'rating' => $dimensionContent->getRating(),
-            'url' => $url,
-            'mediaId' => $dimensionContent->getImage()?->getId(),
-        ];
+        return TestimonialWebsiteDocument::create($testimonial, $dimensionContent, $locale, $webspaces);
     }
 }
