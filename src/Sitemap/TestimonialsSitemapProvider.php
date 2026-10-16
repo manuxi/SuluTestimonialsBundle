@@ -100,40 +100,20 @@ class TestimonialsSitemapProvider implements SitemapProviderInterface
              AND dimensionContent.version = :version
              AND (dimensionContent.seoHideInSitemap = :hide OR dimensionContent.seoHideInSitemap IS NULL)'
         );
-        // Join route for slug - assuming RoutableTrait used and route relation exists
-        // Wait, TestimonialDimensionContent (step 126) uses RoutableTrait.
-        // RoutableTrait has ManyToOne 'route'.
+        // the live stage only exists for published content (workflowPlace is NULL on live rows from Sulu 3)
         $queryBuilder->leftJoin('dimensionContent.route', 'route');
         $queryBuilder->setParameter('locale', $locale);
         $queryBuilder->setParameter('stage', DimensionContentInterface::STAGE_LIVE);
         $queryBuilder->setParameter('version', DimensionContentInterface::CURRENT_VERSION);
         $queryBuilder->setParameter('hide', false);
         $queryBuilder->andWhere('dimensionContent.id IS NOT NULL');
-        $queryBuilder->andWhere('workflowPlace = :published');
-        $queryBuilder->setParameter('published', \Sulu\Content\Domain\Model\WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
-        // Wait, the JOIN condition handled stage=live, but workflowPlace check is also good for explicit state.
-        // Actually STAGE_LIVE implies it's the live content.
-        // But let's check EventSitemapProvider again... it uses STAGE_LIVE AND checks for dimensionContent.id.
-        // It does NOT explicitly check workflowPlace because STAGE_LIVE only exists if published?
-        // Actually, publishing copies to STAGE_LIVE. So STAGE_LIVE check is sufficient.
         $queryBuilder->select([
             'testimonial.uuid AS id',
             'dimensionContent.locale AS locale',
-            'route.path AS slug', // Route entity has 'path' usually, EventSitemap used 'slug' alias for route.slug?
-            // Route entity in Sulu usually has 'path'. EventSitemap uses 'route.slug'?
-            // Let me check Route entity. Sulu Route entity has 'path'.
-            // EventSitemap line 143: leftJoin('dimensionContent.route', 'route').
-            // select 'route.slug'.
-            // Maybe EventBundle's Route entity is different? Or I am mistaken about standard Route entity.
-            // Sulu\Bundle\RouteBundle\Entity\Route has getPath().
-            // Wait, maybe EventSitemap uses a custom route? No.
-            // I'll stick to 'route.path' if standard.
-            // Actually EventSitemapProvider line 157 says 'route.slug'.
-            // I'll check if I can view Route entity? No need.
-            // I'll use 'route.path' as that is standard Sulu.
+            'route.slug AS slug',
             'dimensionContent.changed AS lastModified',
         ]);
-        $queryBuilder->orderBy('route.path', 'ASC');
+        $queryBuilder->orderBy('route.slug', 'ASC');
         $queryBuilder->setFirstResult($offset);
         $queryBuilder->setMaxResults($limit);
         return $queryBuilder->getQuery()->getResult();
@@ -154,11 +134,11 @@ class TestimonialsSitemapProvider implements SitemapProviderInterface
         $queryBuilder->setParameter('stage', DimensionContentInterface::STAGE_LIVE);
         $queryBuilder->setParameter('version', DimensionContentInterface::CURRENT_VERSION);
         $queryBuilder->setParameter('hide', false);
-        $queryBuilder->andWhere('route.path IS NOT NULL');
+        $queryBuilder->andWhere('route.slug IS NOT NULL');
         $queryBuilder->select([
             'testimonial.uuid AS id',
             'dimensionContent.locale AS locale',
-            'route.path AS slug',
+            'route.slug AS slug',
         ]);
         $result = [];
         foreach ($queryBuilder->getQuery()->getResult() as $row) {
