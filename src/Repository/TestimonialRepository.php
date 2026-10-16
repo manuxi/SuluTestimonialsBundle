@@ -7,7 +7,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use Manuxi\SuluTestimonialsBundle\Entity\Testimonial;
 use Manuxi\SuluTestimonialsBundle\Entity\TestimonialDimensionContent;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Content\Domain\Model\WorkflowInterface;
 use Sulu\Content\Infrastructure\Doctrine\DimensionContentQueryEnhancer;
 use Webmozart\Assert\Assert;
 class TestimonialRepository extends ServiceEntityRepository
@@ -158,15 +157,15 @@ class TestimonialRepository extends ServiceEntityRepository
     }
     public function countPublished(string $locale): int
     {
+        // workflowPlace is not set on the live dimension in Sulu 3 (only rows migrated from Sulu 2 carry
+        // "published"), so a live row for the locale is itself the "published" signal.
         $qb = $this->createQueryBuilder('testimonial');
         $qb->select('COUNT(DISTINCT testimonial.uuid)')
             ->leftJoin('testimonial.dimensionContents', 'dc')
             ->where('dc.locale = :locale')
             ->andWhere('dc.stage = :stage')
-            ->andWhere('dc.workflowPlace = :published')
             ->setParameter('locale', $locale)
-            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE)
-            ->setParameter('published', WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
+            ->setParameter('stage', DimensionContentInterface::STAGE_LIVE);
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
     private function buildQueryBuilder(
@@ -240,8 +239,13 @@ class TestimonialRepository extends ServiceEntityRepository
                 ->setParameter('ids', $filters['ids']);
         }
         if (isset($filters['published']) && $filters['published']) {
-            $queryBuilder->andWhere('dimensionContent.workflowPlace = :published')
-                ->setParameter('published', WorkflowInterface::WORKFLOW_PLACE_PUBLISHED);
+            // published = a live row exists; workflowPlace is NULL on live rows published in Sulu 3
+            $queryBuilder->andWhere('dimensionContent.stage = :publishedStage')
+                ->setParameter('publishedStage', DimensionContentInterface::STAGE_LIVE);
+            if (isset($filters['locale'])) {
+                $queryBuilder->andWhere('dimensionContent.locale = :publishedLocale')
+                    ->setParameter('publishedLocale', $filters['locale']);
+            }
         }
     }
     private function applySortBys(QueryBuilder $queryBuilder, array $sortBys): void

@@ -143,7 +143,9 @@ class TestimonialSearchListener implements EventSubscriberInterface
             'mediaId' => $dimensionContent->getImage()?->getId(),
             'changedAt' => $dimensionContent->getChanged()?->format('c'),
             'createdAt' => $dimensionContent->getCreated()?->format('c'),
-            'published' => WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === $dimensionContent->getWorkflowPlace(),
+            // a live row is published by definition, its workflowPlace is NULL when published in Sulu 3
+            'published' => DimensionContentInterface::STAGE_LIVE === $dimensionContent->getStage()
+                || WorkflowInterface::WORKFLOW_PLACE_PUBLISHED === $dimensionContent->getWorkflowPlace(),
         ]);
     }
 

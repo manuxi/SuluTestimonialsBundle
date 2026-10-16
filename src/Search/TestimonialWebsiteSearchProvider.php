@@ -12,7 +12,6 @@ use Manuxi\SuluTestimonialsBundle\Repository\TestimonialRepository;
 use Sulu\Component\Webspace\Manager\WebspaceManagerInterface;
 use Sulu\Content\Application\ContentAggregator\ContentAggregatorInterface;
 use Sulu\Content\Domain\Model\DimensionContentInterface;
-use Sulu\Content\Domain\Model\WorkflowInterface;
 
 class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
 {
@@ -68,10 +67,6 @@ class TestimonialWebsiteSearchProvider implements ReindexProviderInterface
                         'version' => DimensionContentInterface::CURRENT_VERSION,
                     ]
                 );
-
-                if (WorkflowInterface::WORKFLOW_PLACE_PUBLISHED !== $dimensionContent->getWorkflowPlace()) {
-                    continue;
-                }
 
                 yield $this->createDocument($testimonial, $dimensionContent, $locale, $webspaces);
             }

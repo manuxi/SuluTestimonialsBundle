@@ -140,16 +140,33 @@ class TestimonialSmartContentProvider implements SmartContentProviderInterface
 
         $queryResult = $queryBuilder->getQuery()->getArrayResult();
 
-        return array_map(function ($item) {
-            return [
-                'id' => (string) $item['id'],
-                'title' => (string) ($item['title'] ?? ''),
-                'rating' => (string) ($item['rating'] ?? ''),
-                'date' => $item['testimonialDate'],
-                'publishedState' => 'published' === ($item['workflowPlace'] ?? ''),
-                'published' => $item['workflowPublished'] ?? null,
-            ];
-        }, $queryResult);
+        return array_map(
+            fn (array $item): array => $this->mapQueryResultItem($item, (string) ($filters['stage'] ?? DimensionContentInterface::STAGE_LIVE)),
+            $queryResult
+        );
+    }
+
+    /**
+     * The live dimension only exists for published content, so a live row is published. Its workflowPlace can be
+     * NULL (Sulu 3 does not write it on publish, only rows migrated from Sulu 2 carry "published"), which must not
+     * show up as draft indicator in the smart content selection.
+     *
+     * @param array<string, mixed> $item
+     *
+     * @return array<string, mixed>
+     */
+    protected function mapQueryResultItem(array $item, string $stage): array
+    {
+        return [
+            'id' => (string) $item['id'],
+            'title' => (string) ($item['title'] ?? ''),
+            'rating' => (string) ($item['rating'] ?? ''),
+            'date' => $item['testimonialDate'],
+            'publishedState' => DimensionContentInterface::STAGE_LIVE === $stage
+                || 'published' === ($item['workflowPlace'] ?? '')
+                || null !== ($item['workflowPublished'] ?? null),
+            'published' => $item['workflowPublished'] ?? null,
+        ];
     }
 
     protected function enhanceWithDimensionAttributes(array $filters): array
